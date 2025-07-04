@@ -61,6 +61,12 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    // Material 3 (debes tener esto si usas Scaffold y TopAppBar)
+    implementation("androidx.compose.material3:material3:1.2.1")
+
+    // Material Icons
+    implementation("androidx.compose.material:material-icons-extended:1.6.1")
+
     // Jetpack Compose Navigation
     implementation("androidx.navigation:navigation-compose:$navVersion")
 
