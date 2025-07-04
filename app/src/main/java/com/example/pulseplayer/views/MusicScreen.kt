@@ -22,11 +22,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.pulseplayer.NowPlaying
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.data.entity.Song
+import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
@@ -38,6 +41,7 @@ fun MusicScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
     var selectedSongId by remember { mutableStateOf<Int?>(null) }
+    val playerViewModel: PlayerViewModel = viewModel()
 
     LaunchedEffect(Unit) {
         scope.launch(Dispatchers.IO) {
@@ -70,8 +74,8 @@ fun MusicScreen(navController: NavController) {
         ) {
             items(songs) { song ->
                 SongCardItem(song, selectedSongId == song.idSong) {
-                    selectedSongId = song.idSong
-                    // TODO: reproducir canción con ExoPlayer
+                    val allSongIds = songs.map { it.idSong }
+                    navController.navigate(NowPlaying(song.idSong, allSongIds))
                 }
             }
         }
