@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    kotlin("plugin.serialization") version "2.0.21"
+    id("com.google.devtools.ksp") version "2.0.21-1.0.27"
 }
 
 android {
@@ -38,7 +40,9 @@ android {
         compose = true
     }
 }
-
+val navVersion = "2.8.9"
+val roomVersion = "2.6.0"
+val exoPlayer = "1.3.1"
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -56,4 +60,25 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Jetpack Compose Navigation
+    implementation("androidx.navigation:navigation-compose:$navVersion")
+
+    // Kotlinx Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+
+    // Room
+    implementation("androidx.room:room-runtime:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+
+    // ExoPlayer (media3)
+    implementation ("androidx.media3:media3-exoplayer:$exoPlayer")
+    implementation ("androidx.media3:media3-ui:$exoPlayer")
+
+    // Coil para carátulas (opcional)
+    implementation ("io.coil-kt:coil-compose:2.5.0")
+
+    // Navegación Compose (opcional)
+    implementation ("androidx.navigation:navigation-compose:2.7.7")
 }
