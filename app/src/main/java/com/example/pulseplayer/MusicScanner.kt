@@ -8,8 +8,8 @@ import android.provider.MediaStore
 import android.util.Log
 import com.example.pulseplayer.data.dao.SongDao
 import com.example.pulseplayer.data.entity.Song
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -31,11 +31,15 @@ object MusicScanner {
             MediaStore.Audio.Media.DATA
         )
 
+        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND " +
+                "(${MediaStore.Audio.Media.DATA} LIKE ? OR ${MediaStore.Audio.Media.DATA} LIKE ?)"
+        val selectionArgs = arrayOf("%/Music/%", "%/Download/%")
+
         val cursor = contentResolver.query(
             collection,
             projection,
-            "${MediaStore.Audio.Media.IS_MUSIC} != 0",
-            null,
+            selection,
+            selectionArgs,
             null
         ) ?: return@withContext
 
@@ -52,24 +56,23 @@ object MusicScanner {
 
             Log.d("MusicScanner", "🎧 Total canciones encontradas: ${it.count}")
             while (it.moveToNext()) {
-
                 val path = it.getString(dataCol) ?: continue
+                if (!path.endsWith(".mp3", ignoreCase = true)) continue
+
                 Log.d("MusicScanner", "🎵 Ruta encontrada: $path")
                 foundPaths.add(path)
+
                 val retriever = MediaMetadataRetriever()
                 retriever.setDataSource(path)
 
-                val embeddedPicture = retriever.embeddedPicture
                 val genre = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE) ?: ""
+                val embeddedPicture = retriever.embeddedPicture
                 val coverImageUri = if (embeddedPicture != null) {
                     val bitmap = BitmapFactory.decodeByteArray(embeddedPicture, 0, embeddedPicture.size)
-
-                    // Guarda temporalmente la imagen como archivo y devuelve su Uri
                     val file = File(context.cacheDir, "cover_${path.hashCode()}.jpg")
-                    val outputStream = FileOutputStream(file)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
-                    outputStream.flush()
-                    outputStream.close()
+                    FileOutputStream(file).use { out ->
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+                    }
                     file.toURI().toString()
                 } else {
                     ""
@@ -91,12 +94,11 @@ object MusicScanner {
                     filePath = path
                 )
 
-
                 dao.insert(song)
             }
         }
 
-        // Elimina canciones de la base que ya no existen en el dispositivo
+        // Elimina canciones que ya no existen
         val songsInDb = dao.getAll().first()
         for (song in songsInDb) {
             if (!foundPaths.contains(song.filePath)) {
