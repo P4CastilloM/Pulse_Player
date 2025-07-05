@@ -1,6 +1,9 @@
 package com.example.pulseplayer.util
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.provider.MediaStore
 import android.util.Log
 import com.example.pulseplayer.data.dao.SongDao
@@ -8,6 +11,8 @@ import com.example.pulseplayer.data.entity.Song
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 
 object MusicScanner {
 
@@ -51,6 +56,26 @@ object MusicScanner {
                 val path = it.getString(dataCol) ?: continue
                 Log.d("MusicScanner", "🎵 Ruta encontrada: $path")
                 foundPaths.add(path)
+                val retriever = MediaMetadataRetriever()
+                retriever.setDataSource(path)
+
+                val embeddedPicture = retriever.embeddedPicture
+                val genre = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE) ?: ""
+                val coverImageUri = if (embeddedPicture != null) {
+                    val bitmap = BitmapFactory.decodeByteArray(embeddedPicture, 0, embeddedPicture.size)
+
+                    // Guarda temporalmente la imagen como archivo y devuelve su Uri
+                    val file = File(context.cacheDir, "cover_${path.hashCode()}.jpg")
+                    val outputStream = FileOutputStream(file)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+                    outputStream.flush()
+                    outputStream.close()
+                    file.toURI().toString()
+                } else {
+                    ""
+                }
+
+                retriever.release()
 
                 val song = Song(
                     idSong = path.hashCode(),
@@ -58,13 +83,14 @@ object MusicScanner {
                     artistName = it.getString(artistCol) ?: "Unknown",
                     album = it.getString(albumCol) ?: "",
                     trackNumber = it.getString(trackCol) ?: "",
-                    genre = "",
+                    genre = genre,
                     releaseYear = it.getString(yearCol) ?: "",
-                    coverImage = "",
+                    coverImage = coverImageUri,
                     durationMs = it.getInt(durationCol),
                     formattedDuration = formatDuration(it.getInt(durationCol)),
                     filePath = path
                 )
+
 
                 dao.insert(song)
             }
