@@ -1,8 +1,9 @@
 package com.example.pulseplayer.views
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
@@ -23,18 +24,19 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.pulseplayer.Music
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
-import com.example.pulseplayer.data.entity.Song
 import kotlinx.coroutines.delay
 
-
+@SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
 fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<Int>) {
     val context = LocalContext.current
-    val viewModel: PlayerViewModel = viewModel()
-    val song = viewModel.currentSong.value
+    val parentEntry = remember { navController.getBackStackEntry(Music) }
+    val viewModel: PlayerViewModel = viewModel(parentEntry)
+    val currentSong by viewModel.currentSong
 
     val exoPlayer = viewModel.getPlayer()
     var currentPosition by remember { mutableStateOf(0L) }
@@ -49,25 +51,29 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
         }
     }
 
-    // Cargar canción actual y playlist
-    LaunchedEffect(songId, songIds) {
-        val dao = PulsePlayerDatabase.getDatabase(context).songDao()
-        val songList = songIds.mapNotNull { dao.getById(it) }
-        val startIndex = songList.indexOfFirst { it.idSong == songId }
+//    LaunchedEffect(songId, songIds) {
+//        val dao = PulsePlayerDatabase.getDatabase(context).songDao()
+//        val songList = songIds.mapNotNull { dao.getById(it) }
+//        val startIndex = songList.indexOfFirst { it.idSong == songId }
+//
+//        if (startIndex != -1) {
+//            viewModel.playPlaylist(songList, startIndex)
+//        }
+//    }
 
-        if (startIndex != -1) {
-            viewModel.playPlaylist(songList, startIndex)
-        }
-    }
-
-    if (song == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Cargando...", color = Color.White)
+    if (currentSong == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = Color.White)
         }
         return
     }
 
-    val isPlaying by rememberUpdatedState(viewModel.isPlaying())
+    val isPlaying by viewModel.isPlaying
 
     Scaffold(containerColor = Color.Black) { padding ->
         Column(
@@ -80,7 +86,7 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
             Spacer(modifier = Modifier.height(40.dp))
 
             val painter = rememberAsyncImagePainter(
-                model = if (song!!.coverImage?.isEmpty() == true) R.drawable.ic_music_placeholder else song!!.coverImage
+                model = if (currentSong!!.coverImage?.isEmpty() == true) R.drawable.ic_music_placeholder else currentSong!!.coverImage
             )
 
             Image(
@@ -94,8 +100,8 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Text(song!!.title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Text(song!!.artistName, color = Color.Gray, fontSize = 16.sp, modifier = Modifier.padding(top = 4.dp))
+            Text(currentSong!!.title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text(currentSong!!.artistName, color = Color.Gray, fontSize = 16.sp, modifier = Modifier.padding(top = 4.dp))
 
             Spacer(modifier = Modifier.height(32.dp))
 
