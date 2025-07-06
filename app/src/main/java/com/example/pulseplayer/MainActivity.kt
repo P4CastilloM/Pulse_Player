@@ -56,8 +56,6 @@ fun PulsePlayerApp() {
         }
     }
 
-
-
     PulsePlayerTheme {
         Navigation()
     }

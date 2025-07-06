@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.pulseplayer.Music
 import com.example.pulseplayer.NowPlaying
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
@@ -73,10 +74,20 @@ fun MusicScreen(navController: NavController) {
                 .background(Color.Black)
         ) {
             items(songs) { song ->
-                SongCardItem(song, selectedSongId == song.idSong) {
-                    val allSongIds = songs.map { it.idSong }
-                    navController.navigate(NowPlaying(song.idSong, allSongIds))
-                }
+                SongCardItem(
+                    song = song,
+                    isSelected = playerViewModel.currentSong.value?.idSong == song.idSong,
+                    onClick = {
+//                        playerViewModel.playSong(song) //reproducir la canción seleccionada
+                        val allSongIds = songs.map { it.idSong } //navegar a la pantalla de reproducción
+                        val startIndex = songs.indexOfFirst { it.idSong == song.idSong }
+                        playerViewModel.playPlaylist(songs, startIndex)
+                        navController.navigate(NowPlaying(song.idSong, allSongIds)) {
+                            popUpTo(Music) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
+                )
             }
         }
     }

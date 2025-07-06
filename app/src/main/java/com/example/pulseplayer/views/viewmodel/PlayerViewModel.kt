@@ -6,6 +6,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.pulseplayer.data.entity.Song
 
@@ -20,9 +21,29 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _currentSong = mutableStateOf<Song?>(null)
     val currentSong: State<Song?> get() = _currentSong
 
+    private val _isPlaying = mutableStateOf(false)
+    val isPlaying: State<Boolean> get() = _isPlaying
+
+    init {
+        exoPlayer.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(state: Int) {
+                println("Player state changed: $state")
+                if (state == Player.STATE_ENDED) {
+                    println("Canción terminó, reproduciendo siguiente...")
+                    playNext()
+                }
+            }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                _isPlaying.value = isPlaying
+            }
+        })
+    }
 
     fun playSong(song: Song) {
         _currentSong.value = song
+        exoPlayer.stop()
+        exoPlayer.clearMediaItems()
         val mediaItem = MediaItem.fromUri(Uri.parse(song.filePath))
         exoPlayer.setMediaItem(mediaItem)
         exoPlayer.prepare()
