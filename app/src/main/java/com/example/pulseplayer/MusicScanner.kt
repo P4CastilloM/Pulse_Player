@@ -46,6 +46,7 @@ object MusicScanner {
         val foundPaths = mutableSetOf<String>()
 
         cursor.use {
+            val idCol = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
             val titleCol = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
             val artistCol = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
             val albumCol = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
@@ -81,7 +82,7 @@ object MusicScanner {
                 retriever.release()
 
                 val song = Song(
-                    idSong = path.hashCode(),
+                    idSong = it.getInt(idCol),
                     title = it.getString(titleCol) ?: "Unknown",
                     artistName = it.getString(artistCol) ?: "Unknown",
                     album = it.getString(albumCol) ?: "",

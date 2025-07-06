@@ -15,6 +15,8 @@ import androidx.core.content.ContextCompat
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.ui.theme.PulsePlayerTheme
 import com.example.pulseplayer.util.MusicScanner
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,9 +47,15 @@ fun PulsePlayerApp() {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        val dao = PulsePlayerDatabase.getDatabase(context).songDao()
-        MusicScanner.scanAndSyncSongs(context, dao)
+        if (hasStoragePermission(context)) {
+            withContext(Dispatchers.IO) {
+                val dao = PulsePlayerDatabase.getDatabase(context).songDao()
+                MusicScanner.scanAndSyncSongs(context, dao)
+            }
+        }
     }
+
+
 
     PulsePlayerTheme {
         Navigation()
