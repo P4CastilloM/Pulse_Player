@@ -8,6 +8,7 @@ import androidx.navigation.toRoute
 import com.example.pulseplayer.views.MenuScreen
 import com.example.pulseplayer.views.MusicScreen
 import com.example.pulseplayer.views.NowPlayingScreen
+import com.example.pulseplayer.views.playbackhistory.PlaybackHistoryScreen
 import com.example.pulseplayer.views.playlist.PlaylistCreateScreen
 import com.example.pulseplayer.views.playlist.PlaylistScreen
 import kotlinx.serialization.Serializable
@@ -33,6 +34,9 @@ object PlaylistCreateScreen
 @Serializable
 data class PlaylistDetailScreen(val playlistId: Int)
 
+//PlaybackHistory
+@Serializable
+object PlaybackHistoryScreen
 
 @Composable
 fun Navigation(){
@@ -59,6 +63,10 @@ fun Navigation(){
         //     val args = backStackEntry.toRoute<PlaylistDetailScreen>()
         //     PlaylistDetailScreen(navController, playlistId = args.playlistId)
         // }
+
+        composable<PlaybackHistoryScreen> {
+            PlaybackHistoryScreen(navController)
+        }
 
     }
 }

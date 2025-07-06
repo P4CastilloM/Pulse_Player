@@ -23,4 +23,14 @@ interface PlaybackHistoryDao {
     @Query("SELECT * FROM playback_history ORDER BY played_at DESC")
     fun getAll(): Flow<List<PlaybackHistory>>
 
+    @Query("SELECT COUNT(*) FROM playback_history")
+    suspend fun getCount(): Int
+
+    @Query("DELETE FROM playback_history WHERE id IN (SELECT id FROM playback_history ORDER BY played_at ASC LIMIT :limit)")
+    suspend fun deleteOldest(limit: Int)
+
+    @Query("SELECT * FROM playback_history ORDER BY played_at DESC")
+    suspend fun getAllOnce(): List<PlaybackHistory> // 🔁 Para cargar una vez en pantalla
+
+
 }

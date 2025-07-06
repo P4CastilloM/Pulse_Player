@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.pulseplayer.Music
+import com.example.pulseplayer.PlaybackHistoryScreen
 import com.example.pulseplayer.PlaylistScreen
 import com.example.pulseplayer.R
 import org.burnoutcrew.reorderable.ReorderableItem
@@ -187,7 +189,6 @@ fun SongCard(title: String, artist: String, colors: List<Color>) {
         }
     }
 }
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ReorderableCategorySection(navController: NavController) {
@@ -239,11 +240,15 @@ fun CategoryCardDynamic(
         else -> R.drawable.ic_album to listOf(Color.Gray, Color.LightGray)
     }
 
-    val onClick = {
-        if (title == "Listas") {
-            navController?.navigate(PlaylistScreen)
+    val onClick: () -> Unit = {
+        when (title) {
+            "Listas" -> navController?.navigate(PlaylistScreen)
+            "Historial" -> navController?.navigate(PlaybackHistoryScreen)
+            else -> {} // necesario para ser exhaustivo
         }
     }
+
+
 
     CategoryCard(
         title = title,

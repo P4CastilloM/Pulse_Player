@@ -9,6 +9,14 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.pulseplayer.data.entity.Song
+import com.example.pulseplayer.data.PulsePlayerDatabase
+import com.example.pulseplayer.data.entity.PlaybackHistory
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -23,6 +31,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _isPlaying = mutableStateOf(false)
     val isPlaying: State<Boolean> get() = _isPlaying
+
+    private val db = PulsePlayerDatabase.getDatabase(context)
+    private val historyDao = db.playbackHistoryDao()
+    private val viewModelScopeIO = CoroutineScope(Dispatchers.IO + SupervisorJob()) // para operaciones Room
 
     init {
         exoPlayer.addListener(object : Player.Listener {
@@ -48,7 +60,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         exoPlayer.setMediaItem(mediaItem)
         exoPlayer.prepare()
         exoPlayer.play()
+
+        // 🔁 Guardar en historial
+        saveToHistory(song)
     }
+
 
     fun playPlaylist(songs: List<Song>, startIndex: Int) {
         playlist = songs
@@ -67,6 +83,22 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         if (playlist.isNotEmpty() && currentIndex > 0) {
             currentIndex--
             playSong(playlist[currentIndex])
+        }
+    }
+    private fun saveToHistory(song: Song) {
+        viewModelScopeIO.launch {
+            // 1. Verificar y limpiar si hay más de 50 registros
+            val count = historyDao.getCount()
+            if (count >= 50) {
+                historyDao.deleteOldest(count - 49) // mantener solo los 49 más nuevos, luego se insertará 1 más
+            }
+
+            // 2. Obtener la fecha actual como string
+            val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+
+            // 3. Insertar nuevo registro
+            val history = PlaybackHistory(songId = song.idSong, playedAt = now)
+            historyDao.insert(history)
         }
     }
 
