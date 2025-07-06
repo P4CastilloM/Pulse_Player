@@ -50,6 +50,7 @@ fun PulsePlayerApp() {
         if (hasStoragePermission(context)) {
             withContext(Dispatchers.IO) {
                 val dao = PulsePlayerDatabase.getDatabase(context).songDao()
+                // 🔥 Importante: escanea en hilo secundario
                 MusicScanner.scanAndSyncSongs(context, dao)
             }
         }
