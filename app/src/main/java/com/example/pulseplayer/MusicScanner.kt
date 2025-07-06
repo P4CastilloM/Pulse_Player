@@ -58,7 +58,9 @@ object MusicScanner {
             Log.d("MusicScanner", "🎧 Total canciones encontradas: ${it.count}")
             while (it.moveToNext()) {
                 val path = it.getString(dataCol) ?: continue
-                if (!path.endsWith(".mp3", ignoreCase = true)) continue
+                val supportedExtensions = listOf(".mp3", ".aac", ".m4a", ".wav", ".ogg", ".flac")
+                if (supportedExtensions.none { path.endsWith(it, ignoreCase = true) }) continue
+
 
                 Log.d("MusicScanner", "🎵 Ruta encontrada: $path")
                 foundPaths.add(path)
