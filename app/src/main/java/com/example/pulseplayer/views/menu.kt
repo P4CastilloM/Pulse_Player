@@ -1,14 +1,19 @@
 package com.example.pulseplayer.views
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -20,7 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.pulseplayer.Music
+import com.example.pulseplayer.PlaylistScreen
 import com.example.pulseplayer.R
+import org.burnoutcrew.reorderable.ReorderableItem
+import org.burnoutcrew.reorderable.detectReorderAfterLongPress
+import org.burnoutcrew.reorderable.rememberReorderableLazyGridState
+import org.burnoutcrew.reorderable.reorderable
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +60,6 @@ fun MenuScreen(navController: NavController) {
                 .padding(innerPadding)
                 .padding(20.dp)
         ) {
-            // Ya no hay título grande aquí (MÚSICA), solo tarjetas
             MusicCard(
                 title = "Música",
                 icon = Icons.Default.MusicNote,
@@ -57,30 +67,9 @@ fun MenuScreen(navController: NavController) {
                 onClick = { navController.navigate(Music) }
             )
 
-
-
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                CategoryCard(
-                    title = "Álbumes",
-                    iconId = R.drawable.ic_album, // Asegúrate de tener este ícono en drawable
-                    colors = listOf(Color(0xFF2193b0), Color(0xFF6dd5ed)),
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                CategoryCard(
-                    title = "Categorías",
-                    iconId = R.drawable.ic_category, // Asegúrate de tener este ícono en drawable
-                    colors = listOf(Color(0xFF56ab2f), Color(0xFFA8E063)),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            ReorderableCategorySection(navController = navController)
 
             SongCard(
                 title = "Blinding Lights",
@@ -121,9 +110,14 @@ fun MusicCard(title: String, icon: ImageVector, colors: List<Color>, onClick: ()
     }
 }
 
-
 @Composable
-fun CategoryCard(title: String, iconId: Int, colors: List<Color>, modifier: Modifier) {
+fun CategoryCard(
+    title: String,
+    iconId: Int,
+    colors: List<Color>,
+    modifier: Modifier,
+    onClick: () -> Unit
+){
     Box(
         modifier = modifier
             .height(100.dp)
@@ -131,7 +125,7 @@ fun CategoryCard(title: String, iconId: Int, colors: List<Color>, modifier: Modi
                 brush = Brush.horizontalGradient(colors),
                 shape = RoundedCornerShape(16.dp)
             )
-            .clickable { },
+            .clickable { onClick() },  // ✅ ejecuta el onClick real
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -192,4 +186,71 @@ fun SongCard(title: String, artist: String, colors: List<Color>) {
             )
         }
     }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ReorderableCategorySection(navController: NavController) {
+    val items = remember { mutableStateListOf("Álbumes", "Listas", "Historial", "Favorito") }
+
+    val state = rememberReorderableLazyGridState(onMove = { from, to ->
+        val item = items.removeAt(from.index)
+        items.add(to.index, item)
+    })
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        state = state.gridState,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(240.dp)
+            .reorderable(state)
+            .detectReorderAfterLongPress(state),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(bottom = 8.dp)
+    ) {
+        items(items.size, { items[it] }) { index ->
+            val title = items[index]
+            ReorderableItem(state, key = title) {
+                val cardModifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(2f)
+                    .animateItemPlacement()
+
+                CategoryCardDynamic(title = title, modifier = cardModifier, navController = navController)
+            }
+        }
+    }
+}
+
+
+@Composable
+fun CategoryCardDynamic(
+    title: String,
+    modifier: Modifier = Modifier,
+    navController: NavController? = null
+) {
+    val (iconId, colors) = when (title) {
+        "Álbumes" -> R.drawable.ic_album to listOf(Color(0xFF2193b0), Color(0xFF6dd5ed))
+        "Listas" -> R.drawable.ic_category to listOf(Color(0xFF56ab2f), Color(0xFFA8E063))
+        "Historial" -> R.drawable.ic_history to listOf(Color(0xFF7F00FF), Color(0xFFE100FF))
+        "Favorito" -> R.drawable.ic_favorite to listOf(Color(0xFFff6a00), Color(0xFFee0979))
+        else -> R.drawable.ic_album to listOf(Color.Gray, Color.LightGray)
+    }
+
+    val onClick = {
+        if (title == "Listas") {
+            navController?.navigate(PlaylistScreen)
+        }
+    }
+
+    CategoryCard(
+        title = title,
+        iconId = iconId,
+        colors = colors,
+        modifier = modifier,
+        onClick = onClick
+    )
+
 }

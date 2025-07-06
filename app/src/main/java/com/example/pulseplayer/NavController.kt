@@ -8,16 +8,31 @@ import androidx.navigation.toRoute
 import com.example.pulseplayer.views.MenuScreen
 import com.example.pulseplayer.views.MusicScreen
 import com.example.pulseplayer.views.NowPlayingScreen
+import com.example.pulseplayer.views.playlist.PlaylistCreateScreen
+import com.example.pulseplayer.views.playlist.PlaylistScreen
 import kotlinx.serialization.Serializable
 
+//PRINCIPAL
 @Serializable
 object Menu
 
+// MUSICA
 @Serializable
 object Music
 
 @Serializable
 data class NowPlaying(val songId: Int, val songIds: List<Int>)
+
+//PLAYLIST
+@Serializable
+object PlaylistScreen
+
+@Serializable
+object PlaylistCreateScreen
+
+@Serializable
+data class PlaylistDetailScreen(val playlistId: Int)
+
 
 @Composable
 fun Navigation(){
@@ -34,5 +49,16 @@ fun Navigation(){
             val args = backStackEntry.toRoute<NowPlaying>()
             NowPlayingScreen(navController = navController, songId = args.songId, songIds = args.songIds)
         }
+        composable<PlaylistScreen> {
+            PlaylistScreen(navController)
+        }
+        composable<PlaylistCreateScreen> {
+            PlaylistCreateScreen(navController)
+        }
+        // composable<PlaylistDetailScreen> { backStackEntry ->
+        //     val args = backStackEntry.toRoute<PlaylistDetailScreen>()
+        //     PlaylistDetailScreen(navController, playlistId = args.playlistId)
+        // }
+
     }
 }
