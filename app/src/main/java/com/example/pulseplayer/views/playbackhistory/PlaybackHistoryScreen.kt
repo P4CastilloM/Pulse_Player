@@ -90,7 +90,7 @@ fun PlaybackHistoryScreen(navController: NavController, playerViewModel: PlayerV
                     onClick = {
                         selectedSongId = song.idSong
                         //playerViewModel.playSong(song, saveHistory = false)
-                        playerViewModel.playPlaylist(singleSongPlaylist,0,false)
+                        playerViewModel.playSong(song)
                         navController.navigate(NowPlaying(song.idSong, listOf(song.idSong)))
                     }
                 )
