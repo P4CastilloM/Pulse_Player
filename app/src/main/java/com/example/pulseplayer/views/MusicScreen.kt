@@ -18,7 +18,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +29,7 @@ import com.example.pulseplayer.NowPlaying
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.data.entity.Song
+import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -63,6 +63,12 @@ fun MusicScreen(navController: NavController) {
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+            )
+        },
+        bottomBar = {
+            MiniPlayerBar(
+                navController = navController,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
             )
         },
         containerColor = Color.Black
