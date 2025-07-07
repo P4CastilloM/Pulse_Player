@@ -1,6 +1,5 @@
-package com.example.pulseplayer.views
+package com.example.pulseplayer.views.player
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,18 +23,15 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.pulseplayer.Music
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import kotlinx.coroutines.delay
 
-@SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
 fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<Int>) {
     val context = LocalContext.current
-    val parentEntry = remember { navController.getBackStackEntry(Music) }
-    val viewModel: PlayerViewModel = viewModel(parentEntry)
+    val viewModel: PlayerViewModel = viewModel() // ✅ Ya no depende de rutas
     val currentSong by viewModel.currentSong
 
     val exoPlayer = viewModel.getPlayer()
@@ -43,23 +39,29 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
     var duration by remember { mutableStateOf(0L) }
 
     // Actualiza progreso
-    LaunchedEffect(exoPlayer) {
+    LaunchedEffect(Unit) {
         while (true) {
-            currentPosition = exoPlayer.currentPosition
-            duration = exoPlayer.duration.takeIf { it > 0 } ?: 1L
+            exoPlayer?.let {
+                currentPosition = it.currentPosition
+                duration = it.duration.takeIf { d -> d > 0 } ?: 1L
+            }
             delay(500)
         }
     }
 
-//    LaunchedEffect(songId, songIds) {
-//        val dao = PulsePlayerDatabase.getDatabase(context).songDao()
-//        val songList = songIds.mapNotNull { dao.getById(it) }
-//        val startIndex = songList.indexOfFirst { it.idSong == songId }
-//
-//        if (startIndex != -1) {
-//            viewModel.playPlaylist(songList, startIndex)
-//        }
-//    }
+    // Carga canción si no hay nada cargado
+    LaunchedEffect(songId, songIds) {
+        if (currentSong == null) {
+            val dao = PulsePlayerDatabase.getDatabase(context).songDao()
+            val songList = songIds.mapNotNull { dao.getById(it) }
+            val startIndex = songList.indexOfFirst { it.idSong == songId }
+
+            if (startIndex != -1) {
+                // Evitamos duplicar historial si ya se reprodujo antes
+                viewModel.playPlaylist(songList, startIndex, saveHistory = false)
+            }
+        }
+    }
 
     if (currentSong == null) {
         Box(
@@ -105,10 +107,9 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Barra de progreso
             Slider(
                 value = currentPosition.toFloat(),
-                onValueChange = { exoPlayer.seekTo(it.toLong()) },
+                onValueChange = { exoPlayer?.seekTo(it.toLong()) },
                 valueRange = 0f..duration.toFloat(),
                 colors = SliderDefaults.colors(
                     thumbColor = Color.White,
@@ -129,7 +130,6 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Controles
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -164,4 +164,3 @@ fun formatDuration(ms: Long): String {
     val sec = totalSec % 60
     return String.format("%02d:%02d", min, sec)
 }
-

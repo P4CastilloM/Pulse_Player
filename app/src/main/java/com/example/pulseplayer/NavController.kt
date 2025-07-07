@@ -7,7 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.pulseplayer.views.MenuScreen
 import com.example.pulseplayer.views.MusicScreen
-import com.example.pulseplayer.views.NowPlayingScreen
+import com.example.pulseplayer.views.player.NowPlayingScreen
 import com.example.pulseplayer.views.playbackhistory.PlaybackHistoryScreen
 import com.example.pulseplayer.views.playlist.PlaylistCreateScreen
 import com.example.pulseplayer.views.playlist.PlaylistScreen

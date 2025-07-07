@@ -19,33 +19,36 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
+import com.example.pulseplayer.NowPlaying
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.data.entity.PlaybackHistory
 import com.example.pulseplayer.data.entity.Song
+import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
-import java.util.Locale
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaybackHistoryScreen(navController: NavController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var selectedSongId by remember { mutableStateOf<Int?>(null) }
+    val playerViewModel: PlayerViewModel = viewModel() // ✅ necesario
 
-    // Historial completo con las canciones
+    var selectedSongId by remember { mutableStateOf<Int?>(null) }
     var historySongs by remember { mutableStateOf<List<Pair<PlaybackHistory, Song>>>(emptyList()) }
 
+    // Cargar historial al iniciar
     LaunchedEffect(true) {
         withContext(Dispatchers.IO) {
             val db = PulsePlayerDatabase.getDatabase(context)
-            val allHistory = db.playbackHistoryDao().getAllOnce() // Necesitarás agregar este método
+            val allHistory = db.playbackHistoryDao().getAllOnce()
             val songDao = db.songDao()
 
             val historyWithSongs = allHistory.mapNotNull { history ->
@@ -84,11 +87,11 @@ fun PlaybackHistoryScreen(navController: NavController) {
                     isSelected = selectedSongId == song.idSong,
                     onClick = {
                         selectedSongId = song.idSong
-                        // Aquí más adelante agregamos la navegación y reproducción
+                        playerViewModel.playSong(song, saveHistory = false)
+                        navController.navigate(NowPlaying(song.idSong, listOf(song.idSong)))
                     }
                 )
             }
-
         }
     }
 }
@@ -108,7 +111,7 @@ fun HistorySongCard(
             .fillMaxWidth()
             .padding(vertical = 6.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF121212)) // fondo oscuro
+            .background(Color(0xFF121212))
             .border(
                 width = borderWidth,
                 color = borderColor,
@@ -153,7 +156,6 @@ fun HistorySongCard(
     }
 }
 
-
 fun formatDateShort(dateTimeString: String): String {
     return try {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
@@ -164,5 +166,3 @@ fun formatDateShort(dateTimeString: String): String {
         dateTimeString
     }
 }
-
-
