@@ -25,18 +25,20 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
+import com.example.pulseplayer.data.entity.Song
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<Int>) {
+fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<Int>, viewModel: PlayerViewModel) {
     val context = LocalContext.current
-    val viewModel: PlayerViewModel = viewModel() // ✅ Ya no depende de rutas
     val currentSong by viewModel.currentSong
 
     val exoPlayer = viewModel.getPlayer()
     var currentPosition by remember { mutableStateOf(0L) }
     var duration by remember { mutableStateOf(0L) }
+
+
 
     // Actualiza progreso
     LaunchedEffect(Unit) {
@@ -51,17 +53,18 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
 
     // Carga canción si no hay nada cargado
     LaunchedEffect(songId, songIds) {
-        if (currentSong == null) {
+        //if (currentSong == null) {
             val dao = PulsePlayerDatabase.getDatabase(context).songDao()
-            val songList = songIds.mapNotNull { dao.getById(it) }
-            val startIndex = songList.indexOfFirst { it.idSong == songId }
+            val songList = songIds.map { dao.getById(it) }
+            val startIndex = songList.indexOfFirst { it?.idSong == songId }
 
-            if (startIndex != -1) {
+            //if (startIndex != -1) {
                 // Evitamos duplicar historial si ya se reprodujo antes
-                viewModel.playPlaylist(songList, startIndex, saveHistory = false)
-            }
-        }
+                viewModel.playPlaylist(songList as List<Song>, startIndex, saveHistory = false)
+            //}
+        //}
     }
+
 
     if (currentSong == null) {
         Box(

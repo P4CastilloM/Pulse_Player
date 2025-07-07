@@ -41,8 +41,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             }
 
             override fun onPlaybackStateChanged(state: Int) {
-                if (state == Player.STATE_ENDED) {
-                    playNext()
+                if (state == Player.STATE_ENDED ) {
+                    if(currentIndex + 1 < playlist.size )
+                    {
+                        playNext()
+                    }
+
                 }
             }
         })
@@ -69,6 +73,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             currentIndex++
             playSong(playlist[currentIndex])
         }
+
     }
 
     fun playPrevious() {

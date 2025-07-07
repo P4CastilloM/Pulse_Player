@@ -36,10 +36,10 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlaybackHistoryScreen(navController: NavController) {
+fun PlaybackHistoryScreen(navController: NavController, playerViewModel: PlayerViewModel) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val playerViewModel: PlayerViewModel = viewModel() // ✅ necesario
+
 
     var selectedSongId by remember { mutableStateOf<Int?>(null) }
     var historySongs by remember { mutableStateOf<List<Pair<PlaybackHistory, Song>>>(emptyList()) }
@@ -80,14 +80,17 @@ fun PlaybackHistoryScreen(navController: NavController) {
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
+
             items(historySongs) { (entry, song) ->
+                val singleSongPlaylist: List<Song> = listOf(song)
                 HistorySongCard(
                     song = song,
                     playedAt = entry.playedAt,
                     isSelected = selectedSongId == song.idSong,
                     onClick = {
                         selectedSongId = song.idSong
-                        playerViewModel.playSong(song, saveHistory = false)
+                        //playerViewModel.playSong(song, saveHistory = false)
+                        playerViewModel.playPlaylist(singleSongPlaylist,0,false)
                         navController.navigate(NowPlaying(song.idSong, listOf(song.idSong)))
                     }
                 )
