@@ -200,4 +200,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+
+    //Repetición
+    private val _isRepeatEnabled = mutableStateOf(false)
+    val isRepeatEnabled: State<Boolean> get() = _isRepeatEnabled
+
+    fun toggleRepeatMode() {
+        val player = ExoPlayerManager.getPlayer() ?: return
+        _isRepeatEnabled.value = !_isRepeatEnabled.value
+        player.repeatMode = if (_isRepeatEnabled.value) Player.REPEAT_MODE_ALL else Player.REPEAT_MODE_OFF
+    }
+
 }

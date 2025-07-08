@@ -262,7 +262,9 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                     Icon(Icons.Default.SkipNext, contentDescription = "Siguiente", tint = Color.White, modifier = Modifier.size(36.dp))
                 }
 
-                IconButton(onClick = { isRepeatEnabled = !isRepeatEnabled }) {
+                val isRepeatEnabled by viewModel.isRepeatEnabled
+
+                IconButton(onClick = { viewModel.toggleRepeatMode() }) {
                     Icon(
                         imageVector = Icons.Default.Repeat,
                         contentDescription = "Repetir",
@@ -270,6 +272,8 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                         modifier = Modifier.size(28.dp)
                     )
                 }
+
+
             }
         }
     }
