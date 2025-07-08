@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.media3.session)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -81,13 +82,12 @@ dependencies {
     // ExoPlayer (media3)
     implementation ("androidx.media3:media3-exoplayer:$exoPlayer")
     implementation ("androidx.media3:media3-ui:$exoPlayer")
-
+    implementation ("androidx.media3:media3-session:$exoPlayer")
     // Coil para carátulas (opcional)
     implementation ("io.coil-kt:coil-compose:2.5.0")
 
-    // Navegación Compose (opcional)
-    implementation ("androidx.navigation:navigation-compose:2.7.7")
-
     //Reoordenable
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
+    implementation ("androidx.media:media:1.6.0")
+
 }

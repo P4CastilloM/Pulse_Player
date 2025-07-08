@@ -1,8 +1,10 @@
 package com.example.pulseplayer.views.viewmodel
 
 import android.app.Application
+import android.content.Intent
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -11,6 +13,7 @@ import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.data.entity.PlaybackHistory
 import com.example.pulseplayer.data.entity.Song
 import com.example.pulseplayer.views.player.ExoPlayerManager // Asegúrate de que esta importación sea correcta
+import com.example.pulseplayer.views.service.MusicPlayerService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -91,11 +94,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
      * @param song La canción a reproducir.
      */
     fun playSong(song: Song) {
-        ExoPlayerManager.play(song)
-        // Actualiza el estado del ViewModel inmediatamente para una respuesta rápida de la UI.
-        // El guardado en historial se hará automáticamente en onMediaItemTransition.
+        ExoPlayerManager.play(song) // primero comienza la reproducción
         _currentSong.value = song
+
+        // Luego inicia el servicio
+        val intent = Intent(context, MusicPlayerService::class.java)
+        ContextCompat.startForegroundService(context, intent)
     }
+
+
 
     /**
      * Inicia la reproducción de una lista de canciones desde un índice específico.
@@ -105,10 +112,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
      */
     fun playPlaylist(songs: List<Song>, startIndex: Int) {
         ExoPlayerManager.playPlaylist(songs, startIndex)
-        // Actualiza el estado del ViewModel inmediatamente para una respuesta rápida de la UI.
-        // El guardado en historial se hará automáticamente en onMediaItemTransition para la primera canción.
         _currentSong.value = songs[startIndex]
+        startMusicService() // Esto ya está bien, solo asegúrate que se llama después de play
     }
+
+
 
     /**
      * Avanza a la siguiente canción en la lista de reproducción.
@@ -225,4 +233,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             _isShuffleEnabled.value = player.shuffleModeEnabled
         }
     }
+
+    private fun startMusicService() {
+        val intent = Intent(context, MusicPlayerService::class.java)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
+    }
+
 }

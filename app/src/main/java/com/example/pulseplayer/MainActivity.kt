@@ -7,9 +7,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.pulseplayer.data.PulsePlayerDatabase
@@ -17,11 +14,15 @@ import com.example.pulseplayer.ui.theme.PulsePlayerTheme
 import com.example.pulseplayer.util.MusicScanner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //Permisos
+
+        // 🔒 Permisos de almacenamiento
         if (!hasStoragePermission(this)) {
             ActivityCompat.requestPermissions(
                 this,
@@ -30,6 +31,20 @@ class MainActivity : ComponentActivity() {
                 else
                     arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
                 100
+            )
+        }
+
+        // 🔔 Permiso de notificaciones (solo Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                101
             )
         }
 
@@ -50,7 +65,6 @@ fun PulsePlayerApp() {
         if (hasStoragePermission(context)) {
             withContext(Dispatchers.IO) {
                 val dao = PulsePlayerDatabase.getDatabase(context).songDao()
-                // 🔥 Importante: escanea en hilo secundario
                 MusicScanner.scanAndSyncSongs(context, dao)
             }
         }
@@ -59,8 +73,6 @@ fun PulsePlayerApp() {
     PulsePlayerTheme {
         Navigation()
     }
-
-    // https://drive.google.com/drive/folders/1dF4tz8xeaFm5Tjr6pX7K-zYjysG73Fww?usp=sharing  MUSICA
 }
 
 private fun hasStoragePermission(context: Context): Boolean {
@@ -76,4 +88,3 @@ private fun hasStoragePermission(context: Context): Boolean {
         ) == PackageManager.PERMISSION_GRANTED
     }
 }
-
