@@ -82,6 +82,7 @@ object ExoPlayerManager {
      * @param songs La lista de canciones a reproducir.
      * @param startIndex El índice de la canción desde la que empezar.
      */
+    @OptIn(UnstableApi::class)
     fun playPlaylist(songs: List<Song>, startIndex: Int) {
         if (exoPlayer == null)  {
             // El reproductor no está inicializado, asegúrate de que 'init()' se llamó.
@@ -113,6 +114,8 @@ object ExoPlayerManager {
         exoPlayer?.setMediaItems(mediaItems, startIndex, 0L)
         exoPlayer?.prepare() // Prepara la reproducción
         exoPlayer?.play() // Comienza a reproducir
+        val intent = Intent(getContext(), MediaPlaybackService::class.java)
+        ContextCompat.startForegroundService(getContext(), intent)
     }
 
     /**
@@ -121,12 +124,13 @@ object ExoPlayerManager {
      */
     @OptIn(UnstableApi::class)
     fun play(song: Song) {
-        val intent = Intent(getContext(), MediaPlaybackService::class.java)
-        ContextCompat.startForegroundService(getContext(), intent)
+
         if (_currentSong?.idSong == song.idSong && exoPlayer?.isPlaying == true) {
             return
         }
         playPlaylist(listOf(song), 0)
+        val intent = Intent(getContext(), MediaPlaybackService::class.java)
+        ContextCompat.startForegroundService(getContext(), intent)
     }
 
     /**

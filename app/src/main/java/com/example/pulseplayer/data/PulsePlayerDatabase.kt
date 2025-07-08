@@ -15,7 +15,7 @@ import com.example.pulseplayer.data.entity.Song
 
 @Database(
     entities = [Playlist::class, Song::class, PlaylistSong::class, PlaybackHistory::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class PulsePlayerDatabase : RoomDatabase() {
