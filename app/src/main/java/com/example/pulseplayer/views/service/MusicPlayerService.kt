@@ -12,6 +12,7 @@ import android.util.Log
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.media.app.NotificationCompat.MediaStyle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -122,11 +123,15 @@ class MusicPlayerService : Service() {
             // Botón play/pause
             setImageViewResource(
                 R.id.btn_play_pause,
-                if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+                if (isPlaying) R.drawable.pause2_icon else R.drawable.play2_icon
             )
             setOnClickPendingIntent(R.id.btn_play_pause, playPausePendingIntent)
 
             // Botones anteriores/siguiente/cerrar
+            setImageViewResource(R.id.btn_prev, R.drawable.back2_icon)
+            setImageViewResource(R.id.btn_next, R.drawable.skip2_icon)
+            setImageViewResource(R.id.btn_close, R.drawable.stop_icon)
+
             setOnClickPendingIntent(R.id.btn_prev, prevPendingIntent)
             setOnClickPendingIntent(R.id.btn_next, nextPendingIntent)
             setOnClickPendingIntent(R.id.btn_close, stopPendingIntent)
@@ -134,7 +139,8 @@ class MusicPlayerService : Service() {
 
         // Construcción de la notificación
         val notification = NotificationCompat.Builder(this, "pulseplayer_channel")
-            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setSmallIcon(R.drawable.logo_ico)
+            .setColor(ContextCompat.getColor(this, R.color.pulse_blue))
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(remoteViews)
             .setPriority(NotificationCompat.PRIORITY_LOW)

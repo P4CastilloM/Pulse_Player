@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.app.NotificationManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,44 +18,20 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.ui.theme.PulsePlayerTheme
 import com.example.pulseplayer.util.MusicScanner
+import com.example.pulseplayer.views.AppLifecycleObserver
 import com.example.pulseplayer.views.player.ExoPlayerManager
+import com.example.pulseplayer.views.service.MusicPlayerService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import android.app.NotificationManager
-import com.example.pulseplayer.views.AppLifecycleObserver
-import com.example.pulseplayer.views.service.MusicPlayerService
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Permisos de almacenamiento
-        if (!hasStoragePermission(this)) {
-            ActivityCompat.requestPermissions(
-                this,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                    arrayOf(android.Manifest.permission.READ_MEDIA_AUDIO)
-                else
-                    arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
-                100
-            )
-        }
+        // 👉 Solicita permisos necesarios al iniciar
+        requestAllPermissions()
 
-        // Permiso de notificaciones (Android 13+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
-                101
-            )
-        }
-
-        // 👇 REGISTRA EL OBSERVADOR DE CICLO DE VIDA
+        // 👉 Observador del ciclo de vida para activar/desactivar la notificación
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             AppLifecycleObserver(
                 onAppBackgrounded = {
@@ -65,7 +42,7 @@ class MainActivity : ComponentActivity() {
                 },
                 onAppForegrounded = {
                     val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                    manager.cancel(1) // ID de la notificación
+                    manager.cancel(1) // Oculta la notificación al volver a la app
                 }
             )
         )
@@ -77,6 +54,34 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    // ✅ Pide todos los permisos necesarios (según la versión de Android)
+    private fun requestAllPermissions() {
+        val permissions = mutableListOf<String>()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_AUDIO)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissions.add(android.Manifest.permission.READ_MEDIA_AUDIO)
+            }
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissions.add(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissions.add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }
+
+        if (permissions.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, permissions.toTypedArray(), 100)
+        }
+    }
 }
 
 @Composable
@@ -84,6 +89,7 @@ fun PulsePlayerApp() {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(10000) // Espera un poco para asegurar que ya se hayan pedido permisos
         if (hasStoragePermission(context)) {
             withContext(Dispatchers.IO) {
                 val dao = PulsePlayerDatabase.getDatabase(context).songDao()
@@ -96,6 +102,7 @@ fun PulsePlayerApp() {
         Navigation()
     }
 }
+
 
 private fun hasStoragePermission(context: Context): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
