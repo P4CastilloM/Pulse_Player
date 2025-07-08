@@ -13,6 +13,7 @@ import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.media.app.NotificationCompat.MediaStyle
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import com.example.pulseplayer.MainActivity
 import com.example.pulseplayer.R
@@ -24,6 +25,17 @@ class MusicPlayerService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.d("MusicPlayerService", "✅ onCreate llamado")
+        // ✅ accede al player correctamente
+        ExoPlayerManager.getPlayer()?.addListener(object : Player.Listener {
+
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                showCustomNotification()
+            }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                showCustomNotification()
+            }
+        })
         createNotificationChannel()
         showCustomNotification()
     }
@@ -72,7 +84,7 @@ class MusicPlayerService : Service() {
     private fun showCustomNotification() {
         val player = ExoPlayerManager.getPlayer()
         val song = ExoPlayerManager.getCurrentSong() ?: return
-        val isPlaying = player?.playWhenReady == true && player.playbackState == Player.STATE_READY
+        val isPlaying = player?.isPlaying == true
 
         // Intents para los botones
         val playPauseIntent = Intent(this, MusicPlayerService::class.java).apply {

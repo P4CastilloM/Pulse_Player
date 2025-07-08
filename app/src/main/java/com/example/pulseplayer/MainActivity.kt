@@ -1,28 +1,34 @@
 package com.example.pulseplayer
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import com.example.pulseplayer.data.PulsePlayerDatabase
-import com.example.pulseplayer.ui.theme.PulsePlayerTheme
-import com.example.pulseplayer.util.MusicScanner
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ProcessLifecycleOwner
+import com.example.pulseplayer.data.PulsePlayerDatabase
+import com.example.pulseplayer.ui.theme.PulsePlayerTheme
+import com.example.pulseplayer.util.MusicScanner
+import com.example.pulseplayer.views.player.ExoPlayerManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import android.app.NotificationManager
+import com.example.pulseplayer.views.AppLifecycleObserver
+import com.example.pulseplayer.views.service.MusicPlayerService
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 🔒 Permisos de almacenamiento
+        // Permisos de almacenamiento
         if (!hasStoragePermission(this)) {
             ActivityCompat.requestPermissions(
                 this,
@@ -34,7 +40,7 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        // 🔔 Permiso de notificaciones (solo Android 13+)
+        // Permiso de notificaciones (Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(
                 this,
@@ -47,6 +53,22 @@ class MainActivity : ComponentActivity() {
                 101
             )
         }
+
+        // 👇 REGISTRA EL OBSERVADOR DE CICLO DE VIDA
+        ProcessLifecycleOwner.get().lifecycle.addObserver(
+            AppLifecycleObserver(
+                onAppBackgrounded = {
+                    if (ExoPlayerManager.getPlayer()?.isPlaying == true) {
+                        val intent = Intent(this, MusicPlayerService::class.java)
+                        ContextCompat.startForegroundService(this, intent)
+                    }
+                },
+                onAppForegrounded = {
+                    val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                    manager.cancel(1) // ID de la notificación
+                }
+            )
+        )
 
         enableEdgeToEdge()
         setContent {

@@ -97,9 +97,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         ExoPlayerManager.play(song) // primero comienza la reproducción
         _currentSong.value = song
 
-        // Luego inicia el servicio
-        val intent = Intent(context, MusicPlayerService::class.java)
-        ContextCompat.startForegroundService(context, intent)
+       //// Luego inicia el servicio
+       //val intent = Intent(context, MusicPlayerService::class.java)
+       //ContextCompat.startForegroundService(context, intent)
     }
 
 
@@ -113,7 +113,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun playPlaylist(songs: List<Song>, startIndex: Int) {
         ExoPlayerManager.playPlaylist(songs, startIndex)
         _currentSong.value = songs[startIndex]
-        startMusicService() // Esto ya está bien, solo asegúrate que se llama después de play
+       // startMusicService() // Esto ya está bien, solo asegúrate que se llama después de play
     }
 
 
