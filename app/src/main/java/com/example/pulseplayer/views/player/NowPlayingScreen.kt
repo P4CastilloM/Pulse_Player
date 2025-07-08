@@ -229,7 +229,9 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { isShuffleEnabled = !isShuffleEnabled }) {
+                val isShuffleEnabled by viewModel.isShuffleEnabled
+
+                IconButton(onClick = { viewModel.toggleShuffleMode() }) {
                     Icon(
                         imageVector = Icons.Default.Shuffle,
                         contentDescription = "Aleatorio",
@@ -237,6 +239,7 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                         modifier = Modifier.size(28.dp)
                     )
                 }
+
                 IconButton(
                     onClick = { viewModel.playPrevious() },
                     enabled = canPlayPrevious
