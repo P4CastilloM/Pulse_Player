@@ -82,7 +82,7 @@ object MusicScanner {
                 }
 
                 retriever.release()
-
+                val existing = dao.getById(it.getInt(idCol))
                 val song = Song(
                     idSong = it.getInt(idCol),
                     title = it.getString(titleCol) ?: "Unknown",
@@ -94,8 +94,10 @@ object MusicScanner {
                     coverImage = coverImageUri,
                     durationMs = it.getInt(durationCol),
                     formattedDuration = formatDuration(it.getInt(durationCol)),
-                    filePath = path
+                    filePath = path,
+                    isFavorite = existing?.isFavorite == true  // 💡 mantener favorito si ya lo era
                 )
+
 
                 dao.insert(song)
             }

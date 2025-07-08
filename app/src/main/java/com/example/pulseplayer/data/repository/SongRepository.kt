@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface SongRepository {
     val allSongs: Flow<List<Song>>
+    val favoriteSongs: Flow<List<Song>>
     suspend fun insert(song: Song)
     suspend fun update(song: Song)
     suspend fun delete(song: Song)

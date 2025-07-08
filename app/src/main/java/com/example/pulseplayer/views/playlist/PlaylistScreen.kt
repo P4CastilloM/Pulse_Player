@@ -22,7 +22,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.pulseplayer.PlaylistCreateScreen
+import com.example.pulseplayer.PlaylistDetailScreen
 import com.example.pulseplayer.data.entity.Playlist
+import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlaylistViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +44,12 @@ fun PlaylistScreen(navController: NavController) {
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+            )
+        },
+        bottomBar = {
+            MiniPlayerBar(
+                navController = navController,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
             )
         },
         floatingActionButton = {
@@ -80,7 +88,7 @@ fun PlaylistScreen(navController: NavController) {
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(playlists) { playlist ->
-                        PlaylistCard(playlist)
+                        PlaylistCard(playlist,navController)
                     }
                 }
             }
@@ -89,7 +97,7 @@ fun PlaylistScreen(navController: NavController) {
 }
 
 @Composable
-fun PlaylistCard(playlist: Playlist) {
+fun PlaylistCard(playlist: Playlist, navController: NavController) {
     val colors = listOf(
         listOf(Color(0xFFFF416C), Color(0xFFFF4B2B)),
         listOf(Color(0xFF2193b0), Color(0xFF6dd5ed)),
@@ -107,7 +115,7 @@ fun PlaylistCard(playlist: Playlist) {
             .background(
                 brush = Brush.horizontalGradient(gradient)
             )
-            .clickable { /* Aquí puedes navegar al detalle */ }
+            .clickable { navController.navigate(PlaylistDetailScreen(playlistId = playlist.id)) }
             .padding(16.dp),
         contentAlignment = Alignment.CenterStart
     ) {
