@@ -17,6 +17,7 @@ import com.example.pulseplayer.ui.theme.PulsePlayerTheme
 import com.example.pulseplayer.util.MusicScanner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,10 +34,56 @@ class MainActivity : ComponentActivity() {
             )
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                    200
+                )
+            }
+        }
+
+        // Nuevo: Permiso para reproducción en foreground (Android 12+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK),
+                    300  // Nuevo request code
+                )
+            }
+        }
+
         enableEdgeToEdge()
         setContent {
             PulsePlayerTheme {
                 PulsePlayerApp()
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            100 -> { /* Manejo permiso almacenamiento existente */ }
+            200 -> { /* Manejo permiso notificaciones existente */ }
+            300 -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permiso de reproducción en foreground concedido
+                }
             }
         }
     }

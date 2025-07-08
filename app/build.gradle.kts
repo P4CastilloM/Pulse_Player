@@ -42,7 +42,7 @@ android {
 }
 val navVersion = "2.8.9"
 val roomVersion = "2.6.0"
-val exoPlayer = "1.3.1"
+val exoPlayer = "1.6.1"
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -61,6 +61,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation("androidx.core:core-ktx:1.16.0")
     // Material 3 (debes tener esto si usas Scaffold y TopAppBar)
     implementation("androidx.compose.material3:material3:1.2.1")
 
@@ -81,6 +82,8 @@ dependencies {
     // ExoPlayer (media3)
     implementation ("androidx.media3:media3-exoplayer:$exoPlayer")
     implementation ("androidx.media3:media3-ui:$exoPlayer")
+    implementation("androidx.media3:media3-session:$exoPlayer")
+    implementation("androidx.media3:media3-common:$exoPlayer")
 
     // Coil para carátulas (opcional)
     implementation ("io.coil-kt:coil-compose:2.5.0")
