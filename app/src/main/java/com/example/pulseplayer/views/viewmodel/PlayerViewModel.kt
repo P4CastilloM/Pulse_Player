@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import com.example.pulseplayer.data.PulsePlayerDatabase
@@ -176,4 +177,27 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             historyDao.insert(history)
         }
     }
+
+    // Favorito
+    private val _isCurrentFavorite = mutableStateOf(false)
+    val isCurrentFavorite: State<Boolean> get() = _isCurrentFavorite
+
+    fun checkIfCurrentSongIsFavorite() {
+        viewModelScope.launch {
+            val song = currentSong.value ?: return@launch
+            val dao = PulsePlayerDatabase.getDatabase(getApplication()).songDao()
+            _isCurrentFavorite.value = dao.getById(song.idSong)?.isFavorite == true
+        }
+    }
+
+    fun toggleFavoriteStatus() {
+        viewModelScope.launch {
+            val song = currentSong.value ?: return@launch
+            val dao = PulsePlayerDatabase.getDatabase(getApplication()).songDao()
+            val updatedSong = song.copy(isFavorite = !isCurrentFavorite.value)
+            dao.update(updatedSong)
+            _isCurrentFavorite.value = updatedSong.isFavorite
+        }
+    }
+
 }
