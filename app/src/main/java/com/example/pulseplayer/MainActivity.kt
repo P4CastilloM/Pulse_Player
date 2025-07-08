@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.app.NotificationManager
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -89,12 +91,28 @@ fun PulsePlayerApp() {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(10000) // Espera un poco para asegurar que ya se hayan pedido permisos
-        if (hasStoragePermission(context)) {
+        // ⚠️ Esperamos hasta que el usuario haya respondido los permisos
+        var retries = 10
+        while (!hasStoragePermission(context) && retries > 0) {
+            kotlinx.coroutines.delay(500)
+            retries--
+        }
+
+        if (!hasStoragePermission(context)) {
+            Log.e("PulsePlayer", "❌ Permiso de almacenamiento NO concedido")
+            return@LaunchedEffect
+        }
+
+        try {
             withContext(Dispatchers.IO) {
                 val dao = PulsePlayerDatabase.getDatabase(context).songDao()
                 MusicScanner.scanAndSyncSongs(context, dao)
+                Log.d("PulsePlayer", "✅ Canciones escaneadas correctamente")
             }
+        } catch (e: SecurityException) {
+            Log.e("PulsePlayer", "❌ SecurityException: ${e.message}")
+        } catch (e: Exception) {
+            Log.e("PulsePlayer", "❌ Error escaneando canciones: ${e.message}")
         }
     }
 
@@ -102,6 +120,8 @@ fun PulsePlayerApp() {
         Navigation()
     }
 }
+
+
 
 
 private fun hasStoragePermission(context: Context): Boolean {
