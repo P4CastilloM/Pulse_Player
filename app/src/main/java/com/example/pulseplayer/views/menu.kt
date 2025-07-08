@@ -80,11 +80,6 @@ fun MenuScreen(navController: NavController) {
 
             ReorderableCategorySection(navController = navController)
 
-            SongCard(
-                title = "Blinding Lights",
-                artist = "The Weeknd",
-                colors = listOf(Color(0xFF833ab4), Color(0xFFfd1d1d), Color(0xFFfcb045))
-            )
         }
     }
 }
@@ -154,48 +149,7 @@ fun CategoryCard(
     }
 }
 
-@Composable
-fun SongCard(title: String, artist: String, colors: List<Color>) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp)
-            .background(
-                brush = Brush.horizontalGradient(colors),
-                shape = RoundedCornerShape(16.dp)
-            )
-            .clickable { },
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    text = title,
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = artist,
-                    color = Color.White,
-                    fontSize = 14.sp
-                )
-            }
-            Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(40.dp)
-            )
-        }
-    }
-}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ReorderableCategorySection(navController: NavController) {
@@ -255,9 +209,6 @@ fun CategoryCardDynamic(
             else -> {}
         }
     }
-
-
-
 
     CategoryCard(
         title = title,
