@@ -32,6 +32,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -52,6 +53,10 @@ fun MiniPlayerBar(navController: NavController, modifier: Modifier = Modifier) {
                 isPlaying.value = isPlayingNow
                 currentSong.value = ExoPlayerManager.getCurrentSong()
             }
+
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                currentSong.value = ExoPlayerManager.getCurrentSong()
+            }
         }
         player?.addListener(listener)
 
@@ -59,6 +64,7 @@ fun MiniPlayerBar(navController: NavController, modifier: Modifier = Modifier) {
             player?.removeListener(listener)
         }
     }
+
 
     val song = currentSong.value ?: return
 
