@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.pulseplayer.FavoriteScreen
 import com.example.pulseplayer.Music
 import com.example.pulseplayer.PlaybackHistoryScreen
 import com.example.pulseplayer.PlaylistScreen
@@ -250,9 +251,11 @@ fun CategoryCardDynamic(
         when (title) {
             "Listas" -> navController?.navigate(PlaylistScreen)
             "Historial" -> navController?.navigate(PlaybackHistoryScreen)
-            else -> {} // necesario para ser exhaustivo
+            "Favorito" -> navController?.navigate(FavoriteScreen) // 🔸 Aquí se agregó
+            else -> {}
         }
     }
+
 
 
 
