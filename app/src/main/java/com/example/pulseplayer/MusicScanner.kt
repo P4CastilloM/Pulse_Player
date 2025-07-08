@@ -94,8 +94,10 @@ object MusicScanner {
                     coverImage = coverImageUri,
                     durationMs = it.getInt(durationCol),
                     formattedDuration = formatDuration(it.getInt(durationCol)),
-                    filePath = path
+                    filePath = path,
+                    isFavorite = false
                 )
+
 
                 dao.insert(song)
             }

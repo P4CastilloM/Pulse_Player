@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 class OfflineSongRepository(private val dao: SongDao) : SongRepository {
     override val allSongs: Flow<List<Song>> = dao.getAll()
-
+    override val favoriteSongs: Flow<List<Song>> = dao.getFavorites()
     override suspend fun insert(song: Song) = dao.insert(song)
     override suspend fun update(song: Song) = dao.update(song)
     override suspend fun delete(song: Song) = dao.delete(song)

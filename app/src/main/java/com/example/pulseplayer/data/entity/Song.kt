@@ -16,5 +16,6 @@ data class Song(
     @ColumnInfo(name = "cover_image") val coverImage: String?,
     @ColumnInfo(name = "duration_ms") val durationMs: Int,
     @ColumnInfo(name = "formatted_duration") val formattedDuration: String,
-    @ColumnInfo(name = "file_path") val filePath: String
+    @ColumnInfo(name = "file_path") val filePath: String,
+    @ColumnInfo(name = "is_favorite") val isFavorite: Boolean = false
 )

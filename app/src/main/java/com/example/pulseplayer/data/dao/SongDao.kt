@@ -26,4 +26,7 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE id_song = :id")
     suspend fun getById(id: Int): Song?
 
+    @Query("SELECT * FROM song WHERE is_favorite = 1")
+    fun getFavorites(): Flow<List<Song>>
+
 }
