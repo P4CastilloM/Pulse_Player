@@ -33,7 +33,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     val isPlaying: State<Boolean> get() = _isPlaying
 
     // Variables para controlar el guardado en el historial y evitar duplicados
-    private var _lastSavedSongId: Int? = null
+    //private var _lastSavedSongId: Int? = null
     // No necesitamos _lastSaveTimestamp ni SAVE_DEBOUNCE_MS si el guardado es más preciso.
 
     // Listener para escuchar eventos de ExoPlayer a través de ExoPlayerManager
@@ -51,12 +51,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
             // ¡ACTUALIZADO! Guarda la canción en el historial SOLO si es una canción diferente
             // a la última guardada, para evitar duplicados en transiciones rápidas o reinicios.
-            newSong?.let { song ->
-                if (song.idSong != _lastSavedSongId) {
-                    saveToHistory(song)
-                    _lastSavedSongId = song.idSong // Actualiza la última canción guardada
-                }
-            }
+           //newSong?.let { song ->
+           //    if (song.idSong != _lastSavedSongId) {
+           //        saveToHistory(song)
+           //        _lastSavedSongId = song.idSong // Actualiza la última canción guardada
+           //    }
+           //}
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -66,26 +66,24 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 if (ExoPlayerManager.getPlayer()?.currentMediaItem == null) {
                     _currentSong.value = null
                     _isPlaying.value = false
-                    _lastSavedSongId = null // Resetea la última canción guardada al finalizar la playlist
+                    //_lastSavedSongId = null // Resetea la última canción guardada al finalizar la playlist
                 }
             }
         }
     }
 
     init {
-        // Inicializa ExoPlayerManager (es un singleton, es seguro llamarlo aquí)
         ExoPlayerManager.init(context)
 
-        // ¡ACTUALIZADO! Asegurarse de que el listener se añade solo una vez o se elimina antes de añadir
-        // Aunque ExoPlayer.addListener es idempotente para la misma instancia, si el ViewModel se recrea,
-        // se crea una nueva instancia de playerStateListener.
-        // La mejor manera de evitar acumulación es que el ExoPlayerManager exponga un método para
-        // añadir/remover un listener específico del ViewModel, o que el ViewModel lo gestione.
-        // Aquí, nos aseguramos de que el listener se remueva antes de añadirlo,
-        // esto es una medida defensiva si onCleared no se llama siempre.
-        ExoPlayerManager.getPlayer()?.removeListener(playerStateListener) // Remover por si acaso
-        ExoPlayerManager.getPlayer()?.addListener(playerStateListener) // Añadir el nuevo
+        // Registra el callback cuando cambia la canción dentro del ExoPlayerManager
+        ExoPlayerManager.setOnSaveToHistoryCallback { song ->
+            saveToHistory(song)
+        }
+
+        ExoPlayerManager.getPlayer()?.removeListener(playerStateListener)
+        ExoPlayerManager.getPlayer()?.addListener(playerStateListener)
     }
+
 
     /**
      * Inicia la reproducción de una única canción.

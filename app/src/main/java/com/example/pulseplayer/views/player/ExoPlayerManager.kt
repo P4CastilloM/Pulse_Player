@@ -12,21 +12,35 @@ object ExoPlayerManager {
     private var currentPlaylist: List<Song> = emptyList()
     private var currentPlaylistIndex: Int = -1
     private var _currentSong: Song? = null // Usamos una variable interna para la canción actual
+    private var lastSavedMediaId: String? = null
+
+    private var saveToHistoryCallback: ((Song) -> Unit)? = null
+
+    fun setOnSaveToHistoryCallback(callback: (Song) -> Unit) {
+        saveToHistoryCallback = callback
+    }
 
     // Listener para escuchar eventos de ExoPlayer y mantener nuestro estado sincronizado
     private val playerListener = object : Player.Listener {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            // Este callback se dispara cuando ExoPlayer avanza a una nueva canción en su cola.
-            // Actualizamos nuestro índice y la _currentSong basada en la posición actual de ExoPlayer.
             val newIndex = exoPlayer?.currentMediaItemIndex ?: -1
             if (newIndex != -1 && newIndex < currentPlaylist.size) {
                 currentPlaylistIndex = newIndex
-                _currentSong = currentPlaylist[currentPlaylistIndex]
+                val newSong = currentPlaylist[currentPlaylistIndex]
+                _currentSong = newSong
+
+                // Guardar en historial solo si es un mediaId nuevo
+                val mediaId = mediaItem?.mediaId
+                if (mediaId != null && mediaId != lastSavedMediaId) {
+                    saveToHistoryCallback?.invoke(newSong)
+                    lastSavedMediaId = mediaId
+                }
+
             } else {
-                // Esto podría pasar si la lista se vacía o se reproduce el último elemento y no hay más.
                 _currentSong = null
             }
         }
+
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == Player.STATE_ENDED) {
