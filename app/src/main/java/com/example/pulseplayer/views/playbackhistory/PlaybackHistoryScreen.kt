@@ -82,14 +82,12 @@ fun PlaybackHistoryScreen(navController: NavController, playerViewModel: PlayerV
         ) {
 
             items(historySongs) { (entry, song) ->
-                val singleSongPlaylist: List<Song> = listOf(song)
                 HistorySongCard(
                     song = song,
                     playedAt = entry.playedAt,
                     isSelected = selectedSongId == song.idSong,
                     onClick = {
                         selectedSongId = song.idSong
-                        //playerViewModel.playSong(song, saveHistory = false)
                         playerViewModel.playSong(song)
                         navController.navigate(NowPlaying(song.idSong, listOf(song.idSong)))
                     }

@@ -47,4 +47,8 @@ class PlaylistViewModel(application: Application) : AndroidViewModel(application
             dao.update(playlist)
         }
     }
+
+    suspend fun getPlaylistById(playlistId: Int): Playlist? {
+        return dao.getPlaylistById(playlistId)
+    }
 }
