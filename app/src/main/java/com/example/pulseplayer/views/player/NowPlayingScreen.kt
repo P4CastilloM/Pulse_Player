@@ -25,44 +25,66 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
+import com.example.pulseplayer.data.entity.Song
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<Int>) {
+fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<Int>, viewModel: PlayerViewModel = viewModel()) {
     val context = LocalContext.current
-    val viewModel: PlayerViewModel = viewModel() // ✅ Ya no depende de rutas
-    val currentSong by viewModel.currentSong
+    val currentSong by viewModel.currentSong // Observa la canción actual del ViewModel
 
-    val exoPlayer = viewModel.getPlayer()
+    val exoPlayer = viewModel.getPlayer() // Obtiene la instancia del reproductor de ExoPlayerManager
     var currentPosition by remember { mutableStateOf(0L) }
     var duration by remember { mutableStateOf(0L) }
 
-    // Actualiza progreso
-    LaunchedEffect(Unit) {
-        while (true) {
-            exoPlayer?.let {
-                currentPosition = it.currentPosition
-                duration = it.duration.takeIf { d -> d > 0 } ?: 1L
+    // Estado para habilitar/deshabilitar los botones de navegación
+    var canPlayNext by remember { mutableStateOf(false) }
+    var canPlayPrevious by remember { mutableStateOf(false) }
+
+    // Actualiza el progreso de la reproducción y la duración
+    LaunchedEffect(exoPlayer) {
+        // Asegúrate de que el exoPlayer no sea nulo y esté listo para obtener la posición/duración
+        exoPlayer?.let { player ->
+            while (true) {
+                currentPosition = player.currentPosition
+                // Asegura que la duración no sea cero para evitar divisiones por cero en el Slider
+                duration = player.duration.takeIf { d -> d > 0 } ?: 1L
+
+                // Actualiza el estado de los botones
+                canPlayNext = player.hasNextMediaItem()
+                canPlayPrevious = player.hasPreviousMediaItem()
+
+                delay(500) // Actualiza cada 500ms
             }
-            delay(500)
         }
     }
 
-    // Carga canción si no hay nada cargado
+    // Carga la canción o playlist cuando la pantalla se lanza o los IDs cambian
     LaunchedEffect(songId, songIds) {
-        if (currentSong == null) {
+        // Solo carga la playlist si la canción actual del ViewModel no coincide con la solicitada,
+        // o si no hay ninguna canción reproduciéndose actualmente.
+        // Esto evita recargar innecesariamente la misma canción/playlist.
+        if (viewModel.currentSong.value?.idSong != songId) {
             val dao = PulsePlayerDatabase.getDatabase(context).songDao()
+            // Mapea los IDs a objetos Song, filtrando cualquier resultado nulo
             val songList = songIds.mapNotNull { dao.getById(it) }
+
             val startIndex = songList.indexOfFirst { it.idSong == songId }
 
             if (startIndex != -1) {
-                // Evitamos duplicar historial si ya se reprodujo antes
-                viewModel.playPlaylist(songList, startIndex, saveHistory = false)
+                // Llama a playPlaylist del ViewModel, que a su vez usa el ExoPlayerManager
+                // para reemplazar completamente la cola de reproducción.
+                viewModel.playPlaylist(songList, startIndex)
+            } else {
+                // Manejar el caso en que la songId solicitada no se encuentre en la lista de songIds.
+                // Podrías navegar hacia atrás o mostrar un mensaje de error.
+                // navController.popBackStack()
             }
         }
     }
 
+    // Muestra un indicador de carga si no hay ninguna canción cargada
     if (currentSong == null) {
         Box(
             modifier = Modifier
@@ -75,7 +97,7 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
         return
     }
 
-    val isPlaying by viewModel.isPlaying
+    val isPlaying by viewModel.isPlaying // Observa el estado de reproducción del ViewModel
 
     Scaffold(containerColor = Color.Black) { padding ->
         Column(
@@ -135,7 +157,10 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { viewModel.playPrevious() }) {
+                IconButton(
+                    onClick = { viewModel.playPrevious() },
+                    enabled = canPlayPrevious // Deshabilita si no hay canción anterior
+                ) {
                     Icon(Icons.Default.SkipPrevious, contentDescription = "Anterior", tint = Color.White, modifier = Modifier.size(36.dp))
                 }
 
@@ -150,7 +175,10 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                     )
                 }
 
-                IconButton(onClick = { viewModel.playNext() }) {
+                IconButton(
+                    onClick = { viewModel.playNext() },
+                    enabled = canPlayNext // Deshabilita si no hay canción siguiente
+                ) {
                     Icon(Icons.Default.SkipNext, contentDescription = "Siguiente", tint = Color.White, modifier = Modifier.size(36.dp))
                 }
             }

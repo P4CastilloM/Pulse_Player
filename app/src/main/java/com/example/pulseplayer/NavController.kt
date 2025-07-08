@@ -11,6 +11,7 @@ import com.example.pulseplayer.views.player.NowPlayingScreen
 import com.example.pulseplayer.views.playbackhistory.PlaybackHistoryScreen
 import com.example.pulseplayer.views.playlist.PlaylistCreateScreen
 import com.example.pulseplayer.views.playlist.PlaylistScreen
+import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import kotlinx.serialization.Serializable
 
 //PRINCIPAL
@@ -22,7 +23,7 @@ object Menu
 object Music
 
 @Serializable
-data class NowPlaying(val songId: Int, val songIds: List<Int>)
+data class NowPlaying(val songId: Int, val songIds: List<Int> )
 
 //PLAYLIST
 @Serializable
@@ -41,6 +42,7 @@ object PlaybackHistoryScreen
 @Composable
 fun Navigation(){
     val navController = rememberNavController()
+    val playerViewModel: PlayerViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
     NavHost(navController = navController, startDestination = Menu){
         composable<Menu>{
@@ -51,7 +53,7 @@ fun Navigation(){
         }
         composable<NowPlaying> { backStackEntry ->
             val args = backStackEntry.toRoute<NowPlaying>()
-            NowPlayingScreen(navController = navController, songId = args.songId, songIds = args.songIds)
+            NowPlayingScreen(navController = navController, songId = args.songId, songIds = args.songIds,viewModel = playerViewModel)
         }
         composable<PlaylistScreen> {
             PlaylistScreen(navController)
@@ -65,7 +67,7 @@ fun Navigation(){
         // }
 
         composable<PlaybackHistoryScreen> {
-            PlaybackHistoryScreen(navController)
+            PlaybackHistoryScreen(navController, playerViewModel = playerViewModel)
         }
 
     }
