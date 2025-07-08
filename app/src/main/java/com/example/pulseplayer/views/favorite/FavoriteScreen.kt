@@ -28,6 +28,7 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.pulseplayer.NowPlaying
 import com.example.pulseplayer.data.entity.Song
+import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import com.example.pulseplayer.views.viewmodel.SongViewModel
 
@@ -61,6 +62,12 @@ fun FavoriteScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+            )
+        },
+        bottomBar = {
+            MiniPlayerBar(
+                navController = navController,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
             )
         },
         containerColor = Color.Black

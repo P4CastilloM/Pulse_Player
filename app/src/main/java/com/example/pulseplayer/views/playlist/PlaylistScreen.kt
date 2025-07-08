@@ -24,6 +24,7 @@ import androidx.navigation.NavController
 import com.example.pulseplayer.PlaylistCreateScreen
 import com.example.pulseplayer.PlaylistDetailScreen
 import com.example.pulseplayer.data.entity.Playlist
+import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlaylistViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,6 +44,12 @@ fun PlaylistScreen(navController: NavController) {
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+            )
+        },
+        bottomBar = {
+            MiniPlayerBar(
+                navController = navController,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
             )
         },
         floatingActionButton = {
