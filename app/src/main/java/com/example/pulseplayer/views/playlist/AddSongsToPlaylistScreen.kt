@@ -1,4 +1,4 @@
-package com.example.pulseplayer.views.playlist
+package com.example.pulseplayer.views.playlist // Asegúrate de que este sea el paquete correcto
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
@@ -11,8 +11,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add // Necesitamos este icono
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.* // Importar todo de Material3 para asegurar acceso
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,41 +27,31 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.pulseplayer.Music
-import com.example.pulseplayer.NowPlaying
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
-import com.example.pulseplayer.data.entity.Playlist
+import com.example.pulseplayer.data.entity.PlaylistSong
 import com.example.pulseplayer.data.entity.Song
-import com.example.pulseplayer.ui.components.MiniPlayerBar
-import com.example.pulseplayer.views.viewmodel.PlayerViewModel
-import com.example.pulseplayer.views.viewmodel.PlaylistViewModel
+import com.example.pulseplayer.views.viewmodel.PlayerViewModel // Puede que necesites este si MiniPlayerBar lo usa
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
-// Importa la nueva ruta de navegación
-import com.example.pulseplayer.AddSongsToPlaylistScreen // <-- ¡Importa tu nueva ruta!
-
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlaylistDetailsScreen(navController: NavController, playlistId: Int) {
+fun AddSongsToPlaylistScreen(navController: NavController, playlistId: Int) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val playlistViewModel: PlaylistViewModel = viewModel()
-    val playerViewModel: PlayerViewModel = viewModel()
 
-    var playlist by remember { mutableStateOf<Playlist?>(null) }
-
+    var allSongs by remember { mutableStateOf<List<Song>>(emptyList()) }
+    val songDao = remember { PulsePlayerDatabase.getDatabase(context).songDao() }
     val playlistSongDao = remember { PulsePlayerDatabase.getDatabase(context).playlistSongDao() }
 
-    val songs by remember(playlistId) {
-        playlistSongDao.getSongsInPlaylist(playlistId)
-    }.collectAsState(initial = emptyList())
+    val selectedSongs = remember { mutableStateListOf<Song>() } // Usamos mutableStateListOf para observables de lista
 
-    LaunchedEffect(playlistId) {
+    LaunchedEffect(Unit) {
         scope.launch(Dispatchers.IO) {
-            playlist = playlistViewModel.getPlaylistById(playlistId)
+            allSongs = songDao.getAll().first() // Obtener todas las canciones una sola vez
         }
     }
 
@@ -69,34 +60,59 @@ fun PlaylistDetailsScreen(navController: NavController, playlistId: Int) {
             TopAppBar(
                 title = {
                     Text(
-                        text = playlist?.name ?: "Detalles de la Lista",
+                        text = "Añadir Canciones",
                         color = Color.White,
-                        fontSize = 24.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack, // Usar imageVector
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
             )
         },
-        // ¡Añade el FloatingActionButton aquí!
         floatingActionButton = {
+            val isFabEnabled = selectedSongs.isNotEmpty()
+
             FloatingActionButton(
                 onClick = {
-                    // Navega a la pantalla para añadir canciones, pasando el ID de la playlist actual
-                        navController.navigate(AddSongsToPlaylistScreen(playlistId = playlistId))
+                    if (isFabEnabled) {
+                        scope.launch(Dispatchers.IO) { // Ejecuta la inserción en el hilo de fondo
+                            var currentOrder = 0
+
+                            selectedSongs.forEach { song ->
+                                playlistSongDao.insert(
+                                    PlaylistSong(
+                                        playlistId = playlistId,
+                                        songId = song.idSong,
+                                        songOrder = currentOrder++
+                                    )
+                                )
+                            }
+                            // Después de la operación de base de datos, cambia al hilo principal para navegar
+                            withContext(Dispatchers.Main) {
+                                navController.popBackStack() // <<<<<<<<<<<<<< AHORA EN EL HILO PRINCIPAL
+                            }
+                        }
+                    }
                 },
-                containerColor = Color(0xFF9C27B0), // Color morado similar a tu otro FAB
-                contentColor = Color.White
+                containerColor = Color(0xFF9C27B0),
+                contentColor = Color.White,
+                //enabled = isFabEnabled // Asegúrate de que esta propiedad exista en tu Material3
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Añadir canciones")
+                Icon(
+                    imageVector = Icons.Default.Check, // Usar imageVector
+                    contentDescription = "Añadir seleccionadas"
+                )
             }
-        },
-        bottomBar = {
-            MiniPlayerBar(
-                navController = navController,
-                modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
-            )
-        },
+        }, // <<<<<<<<<<<<<< CIERRE DE LA LAMBDA floatingActionButton DEL SCAFFOLD >>>>>>>>>>>>>>>
         containerColor = Color.Black
     ) { padding ->
         Column(
@@ -105,13 +121,13 @@ fun PlaylistDetailsScreen(navController: NavController, playlistId: Int) {
                 .padding(padding)
                 .background(Color.Black)
         ) {
-            if (songs.isEmpty()) {
+            if (allSongs.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Esta playlist no tiene canciones.",
+                        text = "No hay canciones disponibles.",
                         color = Color.LightGray,
                         fontSize = 16.sp
                     )
@@ -122,17 +138,15 @@ fun PlaylistDetailsScreen(navController: NavController, playlistId: Int) {
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(songs) { song ->
-                        SongCardItem(
+                    items(allSongs) { song ->
+                        SelectableSongCardItem(
                             song = song,
-                            isSelected = playerViewModel.currentSong.value?.idSong == song.idSong,
+                            isSelected = selectedSongs.contains(song),
                             onClick = {
-                                val allSongIds = songs.map { it.idSong } // Esto ya es List<Int>
-                                val startIndex = songs.indexOfFirst { it.idSong == song.idSong }
-                                playerViewModel.playPlaylist(songs, startIndex)
-                                navController.navigate(NowPlaying(song.idSong, allSongIds)) { // <--- ¡CAMBIO AQUÍ! Se pasa directamente allSongIds que ya es List<Int>
-                                    popUpTo(Music) { inclusive = false }
-                                    launchSingleTop = true
+                                if (selectedSongs.contains(song)) {
+                                    selectedSongs.remove(song)
+                                } else {
+                                    selectedSongs.add(song)
                                 }
                             }
                         )
@@ -144,10 +158,14 @@ fun PlaylistDetailsScreen(navController: NavController, playlistId: Int) {
 }
 
 @Composable
-fun SongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit) {
+fun SelectableSongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit) {
     val borderColor by animateColorAsState(
         targetValue = if (isSelected) Color(0xFF9C27B0) else Color.Transparent,
         label = "borderColor"
+    )
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isSelected) Color(0xFF3A004C) else Color(0xFF1C1C1E),
+        label = "backgroundColor"
     )
 
     Card(
@@ -156,7 +174,7 @@ fun SongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit) {
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .border(2.dp, borderColor, shape = RoundedCornerShape(16.dp))
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E)),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
@@ -185,8 +203,16 @@ fun SongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit) {
                 Text(song.artistName, color = Color.LightGray, fontSize = 14.sp)
             }
 
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.Check, // Usar imageVector
+                    contentDescription = "Seleccionado",
+                    tint = Color(0xFF9C27B0),
+                    modifier = Modifier.size(24.dp).padding(end = 4.dp)
+                )
+            }
+
             Text(song.formattedDuration, color = Color.White, fontSize = 14.sp)
         }
     }
 }
-
