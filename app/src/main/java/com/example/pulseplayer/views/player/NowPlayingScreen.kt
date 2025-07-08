@@ -55,7 +55,11 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
     // Estados visuales (solo estético)
     var isShuffleEnabled by remember { mutableStateOf(false) }
     var isRepeatEnabled by remember { mutableStateOf(false) }
-    var isFavorite by remember { mutableStateOf(false) }
+    val isFavorite by viewModel.isCurrentFavorite
+
+    LaunchedEffect(currentSong?.idSong) {
+        viewModel.checkIfCurrentSongIsFavorite()
+    }
 
     // Actualiza el progreso de la reproducción y la duración
     LaunchedEffect(exoPlayer) {
@@ -123,13 +127,16 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                     containerColor = Color.Black
                 ),
                 actions = {
-                    IconButton(onClick = { isFavorite = !isFavorite }) {
+                    IconButton(onClick = {
+                        viewModel.toggleFavoriteStatus()
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Favorite,
                             contentDescription = "Favorito",
                             tint = if (isFavorite) Color.Red else Color.White
                         )
                     }
+
                 }
             )
         }
