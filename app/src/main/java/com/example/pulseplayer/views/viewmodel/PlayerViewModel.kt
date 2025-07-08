@@ -200,4 +200,31 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+
+    //Repetición
+    private val _isRepeatEnabled = mutableStateOf(false)
+    val isRepeatEnabled: State<Boolean> get() = _isRepeatEnabled
+
+    fun toggleRepeatMode() {
+        val player = ExoPlayerManager.getPlayer() ?: return
+        _isRepeatEnabled.value = !_isRepeatEnabled.value
+        player.repeatMode = if (_isRepeatEnabled.value) Player.REPEAT_MODE_ALL else Player.REPEAT_MODE_OFF
+    }
+
+    //Aleatorio
+    private val _isShuffleEnabled = mutableStateOf(false)
+    val isShuffleEnabled: State<Boolean> get() = _isShuffleEnabled
+
+    fun toggleShuffleMode() {
+        val player = ExoPlayerManager.getPlayer() ?: return
+        _isShuffleEnabled.value = !_isShuffleEnabled.value
+        player.shuffleModeEnabled = _isShuffleEnabled.value
+    }
+    init {
+        // ✅ Esto sincroniza el estado inicial con el reproductor
+        ExoPlayerManager.getPlayer()?.let { player ->
+            _isRepeatEnabled.value = player.repeatMode == Player.REPEAT_MODE_ALL
+            _isShuffleEnabled.value = player.shuffleModeEnabled
+        }
+    }
 }

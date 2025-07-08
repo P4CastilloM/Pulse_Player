@@ -229,7 +229,9 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { isShuffleEnabled = !isShuffleEnabled }) {
+                val isShuffleEnabled by viewModel.isShuffleEnabled
+
+                IconButton(onClick = { viewModel.toggleShuffleMode() }) {
                     Icon(
                         imageVector = Icons.Default.Shuffle,
                         contentDescription = "Aleatorio",
@@ -237,6 +239,7 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                         modifier = Modifier.size(28.dp)
                     )
                 }
+
                 IconButton(
                     onClick = { viewModel.playPrevious() },
                     enabled = canPlayPrevious
@@ -262,7 +265,9 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                     Icon(Icons.Default.SkipNext, contentDescription = "Siguiente", tint = Color.White, modifier = Modifier.size(36.dp))
                 }
 
-                IconButton(onClick = { isRepeatEnabled = !isRepeatEnabled }) {
+                val isRepeatEnabled by viewModel.isRepeatEnabled
+
+                IconButton(onClick = { viewModel.toggleRepeatMode() }) {
                     Icon(
                         imageVector = Icons.Default.Repeat,
                         contentDescription = "Repetir",
@@ -270,6 +275,8 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                         modifier = Modifier.size(28.dp)
                     )
                 }
+
+
             }
         }
     }
