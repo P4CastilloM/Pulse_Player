@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,7 +66,10 @@ fun MiniPlayerBar(navController: NavController, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .height(72.dp)
-            .background(Color(0xFF222222))
+            .background(
+                brush = Brush.horizontalGradient(listOf(Color(0xFF833ab4), Color(0xFFfd1d1d), Color(0xFFfcb045))),
+                shape = RoundedCornerShape(16.dp)
+            )
             .clickable {
                 navController.navigate(
                     NowPlaying(song.idSong, listOf(song.idSong))

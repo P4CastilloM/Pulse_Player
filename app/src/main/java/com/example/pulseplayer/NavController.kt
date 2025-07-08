@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.pulseplayer.views.MenuScreen
 import com.example.pulseplayer.views.MusicScreen
+import com.example.pulseplayer.views.favorite.FavoriteScreen
 import com.example.pulseplayer.views.player.NowPlayingScreen
 import com.example.pulseplayer.views.playbackhistory.PlaybackHistoryScreen
 import com.example.pulseplayer.views.playlist.PlaylistCreateScreen
@@ -39,6 +40,10 @@ data class PlaylistDetailScreen(val playlistId: Int)
 @Serializable
 object PlaybackHistoryScreen
 
+//FAVORITE
+@Serializable
+object FavoriteScreen
+
 @Composable
 fun Navigation(){
     val navController = rememberNavController()
@@ -68,6 +73,11 @@ fun Navigation(){
 
         composable<PlaybackHistoryScreen> {
             PlaybackHistoryScreen(navController, playerViewModel = playerViewModel)
+        }
+
+
+        composable<FavoriteScreen> {
+            FavoriteScreen(navController = navController)
         }
 
     }
