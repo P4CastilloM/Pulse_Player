@@ -8,4 +8,6 @@ interface PlaybackHistoryRepository {
     suspend fun insert(history: PlaybackHistory)
     suspend fun update(history: PlaybackHistory)
     suspend fun delete(history: PlaybackHistory)
+    suspend fun deleteAll() // 👈 Nueva función
 }
+

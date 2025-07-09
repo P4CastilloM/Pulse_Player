@@ -32,5 +32,7 @@ interface PlaybackHistoryDao {
     @Query("SELECT * FROM playback_history ORDER BY played_at DESC")
     suspend fun getAllOnce(): List<PlaybackHistory> // 🔁 Para cargar una vez en pantalla
 
+    @Query("DELETE FROM playback_history")
+    suspend fun deleteAll()
 
 }

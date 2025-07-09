@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +28,7 @@ import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.data.entity.PlaybackHistory
 import com.example.pulseplayer.data.entity.Song
+import com.example.pulseplayer.ui.components.DeleteConfirmationDialog
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,6 +42,7 @@ fun PlaybackHistoryScreen(navController: NavController, playerViewModel: PlayerV
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    var showConfirmDialog by remember { mutableStateOf(false) }
 
     var selectedSongId by remember { mutableStateOf<Int?>(null) }
     var historySongs by remember { mutableStateOf<List<Pair<PlaybackHistory, Song>>>(emptyList()) }
@@ -69,6 +72,11 @@ fun PlaybackHistoryScreen(navController: NavController, playerViewModel: PlayerV
                         Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = Color.White)
                     }
                 },
+                actions = {
+                    IconButton(onClick = { showConfirmDialog = true }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar historial", tint = Color.White)
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
             )
         },
@@ -95,6 +103,24 @@ fun PlaybackHistoryScreen(navController: NavController, playerViewModel: PlayerV
             }
         }
     }
+    if (showConfirmDialog) {
+        DeleteConfirmationDialog(
+            title = "Eliminar historial",
+            message = "¿Estás seguro de que quieres borrar todo el historial de reproducción?",
+            onConfirm = {
+                showConfirmDialog = false
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        val db = PulsePlayerDatabase.getDatabase(context)
+                        db.playbackHistoryDao().deleteAll()
+                        historySongs = emptyList()
+                    }
+                }
+            },
+            onDismiss = { showConfirmDialog = false }
+        )
+    }
+
 }
 
 @Composable
