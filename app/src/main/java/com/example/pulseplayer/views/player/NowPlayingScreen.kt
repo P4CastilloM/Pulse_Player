@@ -1,8 +1,8 @@
 package com.example.pulseplayer.views.player
 
+import android.widget.Space
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -30,11 +30,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.data.entity.Song
+import com.example.pulseplayer.isLandscape
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import kotlinx.coroutines.delay
 
@@ -57,13 +59,16 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
     var isRepeatEnabled by remember { mutableStateOf(false) }
     val isFavorite by viewModel.isCurrentFavorite
 
+    //orientacion de la pantalla
+    val landscape = isLandscape()
+
     LaunchedEffect(currentSong?.idSong) {
         viewModel.checkIfCurrentSongIsFavorite()
     }
 
     // Actualiza el progreso de la reproducción y la duración
     LaunchedEffect(exoPlayer) {
-        // Asegúrate de que el exoPlayer no sea nulo y esté listo para obtener la posición/duración
+        // Ver que el exoPlayer no sea nulo y esté listo para obtener la posición/duración
         exoPlayer?.let { player ->
             while (true) {
                 currentPosition = player.currentPosition
@@ -95,13 +100,11 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                 // Llama a playPlaylist del ViewModel, que a su vez usa el ExoPlayerManager
                 // para reemplazar completamente la cola de reproducción.
                 viewModel.playPlaylist(songList, startIndex)
-            } else {
-                // Manejar el caso en que la songId solicitada no se encuentre en la lista de songIds.
-                // Podrías navegar hacia atrás o mostrar un mensaje de error.
-                // navController.popBackStack()
             }
         }
     }
+
+
 
     // Muestra un indicador de carga si no hay ninguna canción cargada
     if (currentSong == null) {
@@ -141,147 +144,201 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Imagen contenida en Card
-            Card(
-                modifier = Modifier
-                    .size(300.dp),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                val painter = rememberAsyncImagePainter(
-                    model = if (currentSong!!.coverImage?.isEmpty() == true) R.drawable.ic_music_placeholder else currentSong!!.coverImage
-                )
-                Image(
-                    painter = painter,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Título con scroll horizontal
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .height(28.dp)
-                .horizontalScroll(rememberScrollState())
-            ) {
-                Text(
-                    currentSong!!.title,
-                    color = Color.White,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            // Artista con scroll horizontal
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .height(20.dp)
-                .horizontalScroll(rememberScrollState())
-            ) {
-                Text(
-                    currentSong!!.artistName,
-                    color = Color.Gray,
-                    fontSize = 16.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-
-            Column(modifier = Modifier.fillMaxWidth()) {
-                // Barra de progreso personalizada
-                CustomThinSlider(
-                    value = currentPosition.toFloat(),
-                    onValueChange = { exoPlayer?.seekTo(it.toLong()) },
-                    valueRange = 0f..duration.toFloat()
-                )
-
-
-                // Tiempo
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(formatDuration(currentPosition), color = Color.White, fontSize = 12.sp)
-                    Text(formatDuration(duration), color = Color.White, fontSize = 12.sp)
-                }
-            }
-
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Controles de reproducción
+        //si el modo landscape esta activado toma este diseño
+        if (landscape) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceAround,
             ) {
-                val isShuffleEnabled by viewModel.isShuffleEnabled
-
-                IconButton(onClick = { viewModel.toggleShuffleMode() }) {
-                    Icon(
-                        imageVector = Icons.Default.Shuffle,
-                        contentDescription = "Aleatorio",
-                        tint = if (isShuffleEnabled) Color.Cyan else Color.White,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-
-                IconButton(
-                    onClick = { viewModel.playPrevious() },
-                    enabled = canPlayPrevious
+                //imagen a la izquierda
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(1f),
+                    shape = RoundedCornerShape(24.dp)
                 ) {
-                    Icon(Icons.Default.SkipPrevious, contentDescription = "Anterior", tint = Color.White, modifier = Modifier.size(36.dp))
-                }
-
-                IconButton(onClick = {
-                    if (isPlaying) viewModel.pause() else viewModel.resume()
-                }) {
-                    Icon(
-                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = "Play/Pause",
-                        tint = Color.White,
-                        modifier = Modifier.size(64.dp)
+                    val painter = rememberAsyncImagePainter(
+                        model = if (currentSong!!.coverImage?.isEmpty() == true)
+                            R.drawable.ic_music_placeholder
+                        else currentSong!!.coverImage
+                    )
+                    Image(
+                        painter = painter,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
 
-                IconButton(
-                    onClick = { viewModel.playNext() },
-                    enabled = canPlayNext
+                Spacer(modifier = Modifier.width(24.dp))
+
+                //controles a la derecha
+                Column(
+                    modifier = Modifier.weight(2f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Icon(Icons.Default.SkipNext, contentDescription = "Siguiente", tint = Color.White, modifier = Modifier.size(36.dp))
+                    SongDetails(currentSong!!)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    ProgressSlider(currentPosition, duration, exoPlayer)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    PlaybackControls(isPlaying, canPlayPrevious, canPlayNext, viewModel)
                 }
+            }
+        } else {
+            //sino ocupar el diseño vertical normal
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(40.dp))
 
-                val isRepeatEnabled by viewModel.isRepeatEnabled
-
-                IconButton(onClick = { viewModel.toggleRepeatMode() }) {
-                    Icon(
-                        imageVector = Icons.Default.Repeat,
-                        contentDescription = "Repetir",
-                        tint = if (isRepeatEnabled) Color.Cyan else Color.White,
-                        modifier = Modifier.size(28.dp)
+                // Imagen contenida en Card
+                Card(
+                    modifier = Modifier
+                        .size(300.dp),
+                    shape = RoundedCornerShape(24.dp)
+                ) {
+                    val painter = rememberAsyncImagePainter(
+                        model = if (currentSong!!.coverImage?.isEmpty() == true) R.drawable.ic_music_placeholder else currentSong!!.coverImage
+                    )
+                    Image(
+                        painter = painter,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
 
-
+                Spacer(modifier = Modifier.height(24.dp))
+                SongDetails(currentSong!!)
+                Spacer(modifier = Modifier.height(24.dp))
+                ProgressSlider(currentPosition, duration, exoPlayer)
+                Spacer(modifier = Modifier.height(24.dp))
+                PlaybackControls(isPlaying, canPlayPrevious, canPlayNext, viewModel)
             }
         }
     }
-
 }
+
+//componente de controles de reproduccion
+@Composable
+fun PlaybackControls(isPlaying: Boolean, canPlayPrevious: Boolean, canPlayNext: Boolean, viewModel: PlayerViewModel) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val isShuffleEnabled by viewModel.isShuffleEnabled
+        val isRepeatEnabled by viewModel.isRepeatEnabled
+
+        IconButton(onClick = { viewModel.toggleShuffleMode() }) {
+            Icon(
+                imageVector = Icons.Default.Shuffle,
+                contentDescription = "Aleatorio",
+                tint = if (isShuffleEnabled) Color.Cyan else Color.White,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+
+        IconButton(
+            onClick = { viewModel.playPrevious() },
+            enabled = canPlayPrevious
+        ) {
+            Icon(Icons.Default.SkipPrevious, contentDescription = "Anterior", tint = Color.White, modifier = Modifier.size(36.dp))
+        }
+
+        IconButton(onClick = {
+            if (isPlaying) viewModel.pause() else viewModel.resume()
+        }) {
+            Icon(
+                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                contentDescription = "Play/Pause",
+                tint = Color.White,
+                modifier = Modifier.size(64.dp)
+            )
+        }
+
+        IconButton(
+            onClick = { viewModel.playNext() },
+            enabled = canPlayNext
+        ) {
+            Icon(Icons.Default.SkipNext, contentDescription = "Siguiente", tint = Color.White, modifier = Modifier.size(36.dp))
+        }
+
+        IconButton(onClick = { viewModel.toggleRepeatMode() }) {
+            Icon(
+                imageVector = Icons.Default.Repeat,
+                contentDescription = "Repetir",
+                tint = if (isRepeatEnabled) Color.Cyan else Color.White,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+//componente de barra de progreso
+@Composable
+fun ProgressSlider(currentPosition: Long, duration: Long, exoPlayer: ExoPlayer?) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        CustomThinSlider(
+            value = currentPosition.toFloat(),
+            onValueChange = { exoPlayer?.seekTo(it.toLong()) },
+            valueRange = 0f..duration.toFloat()
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(formatDuration(currentPosition), color = Color.White, fontSize = 12.sp)
+            Text(formatDuration(duration), color = Color.White, fontSize = 12.sp)
+        }
+    }
+}
+
+//componente de detalles de la cancion
+@Composable
+fun SongDetails(song: Song) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(28.dp)
+                .horizontalScroll(rememberScrollState())
+        ) {
+            Text(
+                song.title,
+                color = Color.White,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(20.dp)
+                .horizontalScroll(rememberScrollState())
+        ) {
+            Text(
+                song.artistName,
+                color = Color.Gray,
+                fontSize = 16.sp
+            )
+        }
+    }
+}
+
+// Barra de Progreso Delgada
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomThinSlider(
@@ -353,8 +410,6 @@ fun CustomThinSlider(
         )
     )
 }
-
-
 
 fun formatDuration(ms: Long): String {
     val totalSec = ms / 1000

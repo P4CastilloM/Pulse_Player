@@ -182,4 +182,7 @@ object ExoPlayerManager {
      * @return La canción actual o null si no hay ninguna.
      */
     fun getCurrentSong() = _currentSong
+    fun getCurrentSongId(): Int? {
+        return exoPlayer?.currentMediaItem?.mediaId?.toIntOrNull()
+    }
 }

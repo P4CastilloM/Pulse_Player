@@ -6,13 +6,14 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.app.NotificationManager
+import android.content.res.Configuration
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -121,9 +122,6 @@ fun PulsePlayerApp() {
     }
 }
 
-
-
-
 private fun hasStoragePermission(context: Context): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         ContextCompat.checkSelfPermission(
@@ -136,4 +134,10 @@ private fun hasStoragePermission(context: Context): Boolean {
             android.Manifest.permission.READ_EXTERNAL_STORAGE
         ) == PackageManager.PERMISSION_GRANTED
     }
+}
+
+@Composable
+fun isLandscape(): Boolean{
+    val config = LocalConfiguration.current
+    return config.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
