@@ -9,10 +9,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.data.entity.Playlist
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +33,7 @@ fun PlaylistCreateScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nueva Lista", color = Color.White) },
+                title = { Text(stringResource(R.string.playlist_add), color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
@@ -53,7 +55,7 @@ fun PlaylistCreateScreen(navController: NavController) {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Nombre de la lista") },
+                label = { Text("Nombre ${stringResource(R.string.playlist_screen_title)}") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(

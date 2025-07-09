@@ -1,3 +1,38 @@
 <resources>
-    <string name="app_name">PulsePlayer</string>
+    <string name="app_name">Pulse Player</string>
+    <!-- Menú principal -->
+    <string name="title_music">Música</string>
+    <string name="title_albums">Álbumes</string>
+    <string name="title_playlists">Listas</string>
+    <string name="title_history">Historial</string>
+    <string name="title_favorites">Favorito</string>
+
+    <!-- Pantalla: Listas -->
+    <string name="playlist_screen_title">Listas de Reproducción</string>
+    <string name="playlist_empty_message">Presione el botón + para crear una lista de reproducción</string>
+    <string name="playlist_add_song">Añadir Canciones</string>
+    <string name="playlist_empty_message2">Esta lista de reproducción no tiene canciones</string>
+    <string name="playlist_add">Nueva Lista de Reproducción</string>
+
+    <!-- Pantalla: Favoritos -->
+    <string name="favorites_screen_title">Favoritos</string>
+    <string name="favorites_empty_message">Presione el botón ❤️ para agregar canciones a favoritos</string>
+
+    <!-- Pantalla: Historial -->
+    <string name="history_screen_title">Historial</string>
+    <string name="history_empty_message">No hay historial de reproducción</string>
+    <string name="delete_history_description">Eliminar historial</string>
+
+    <!-- Controles multimedia -->
+    <string name="play">Reproducir</string>
+    <string name="pause">Pausar</string>
+    <string name="next">Siguiente</string>
+    <string name="previous">Anterior</string>
+    <string name="close">Cerrar</string>
+
+        <!-- Diálogo de confirmación -->
+    <string name="dialog_delete_title">Eliminar historial</string>
+    <string name="dialog_delete_message">¿Estás seguro de que quieres borrar todo el historial de reproducción?</string>
+    <string name="dialog_confirm">Eliminar</string>
+    <string name="dialog_cancel">Cancelar</string>
 </resources>

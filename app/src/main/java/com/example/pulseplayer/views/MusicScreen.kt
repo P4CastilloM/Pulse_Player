@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,7 +57,7 @@ fun MusicScreen(navController: NavController) {
             TopAppBar(
                 title = {
                     Text(
-                        text = "PulsePlayer",
+                        text = stringResource(R.string.title_music),
                         color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold

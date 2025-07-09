@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.pulseplayer.PlaylistCreateScreen
 import com.example.pulseplayer.PlaylistDetailScreen
+import com.example.pulseplayer.R
 import com.example.pulseplayer.data.entity.Playlist
 import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlaylistViewModel
@@ -38,7 +40,7 @@ fun PlaylistScreen(navController: NavController) {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Listas de Reproducción",
+                        text = stringResource(R.string.playlist_screen_title),
                         fontSize = 20.sp,
                         color = Color.White
                     )
@@ -75,7 +77,7 @@ fun PlaylistScreen(navController: NavController) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Presione el botón + para crear una lista de reproducción",
+                        text = stringResource(R.string.playlist_empty_message),
                         color = Color.LightGray,
                         fontSize = 16.sp
                     )

@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,6 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.pulseplayer.NowPlaying
+import com.example.pulseplayer.R
 import com.example.pulseplayer.data.entity.Song
 import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
@@ -46,7 +48,7 @@ fun FavoriteScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Favoritos",
+                        text = stringResource(R.string.favorites_screen_title),
                         color = Color.White,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold
@@ -85,7 +87,7 @@ fun FavoriteScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Presione el botón ❤️ para agregar canciones a favoritos",
+                            text = stringResource(R.string.favorites_empty_message),
                             color = Color.LightGray,
                             fontSize = 16.sp
                         )
