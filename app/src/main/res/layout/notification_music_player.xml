@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/notification_layout"
-    android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="72dp"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
     android:padding="8dp"
     android:gravity="center_vertical"
-    android:background="?android:attr/selectableItemBackground"> <!-- Usa fondo del sistema -->
+    android:background="?android:attr/selectableItemBackground">
 
     <ImageView
         android:id="@+id/image_cover"
@@ -16,7 +16,7 @@
         android:src="@drawable/ic_music_placeholder" />
 
     <LinearLayout
-        android:layout_width="191dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:layout_weight="1"
@@ -27,8 +27,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxLines="1"
+            android:ellipsize="end"
             android:text="Título"
-            android:textColor="@color/black"
+            android:textColor="@android:color/black"
             android:textSize="14sp" />
 
         <TextView
@@ -36,6 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxLines="1"
+            android:ellipsize="end"
             android:text="Artista"
             android:textColor="#686868"
             android:textSize="12sp" />
@@ -43,22 +45,28 @@
 
     <ImageView
         android:id="@+id/btn_prev"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:contentDescription="Anterior"
-        android:src="@android:drawable/ic_media_previous" />
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:padding="4dp"
+        android:scaleType="centerInside"
+        android:src="@android:drawable/ic_media_previous"
+        android:contentDescription="Anterior" />
 
     <ImageView
         android:id="@+id/btn_play_pause"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:padding="6dp"
+        android:scaleType="centerInside"
         android:src="@android:drawable/ic_media_play"
         android:contentDescription="Play/Pause" />
 
     <ImageView
         android:id="@+id/btn_next"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:padding="4dp"
+        android:scaleType="centerInside"
         android:src="@android:drawable/ic_media_next"
         android:contentDescription="Siguiente" />
 
@@ -66,6 +74,8 @@
         android:id="@+id/btn_close"
         android:layout_width="32dp"
         android:layout_height="32dp"
+        android:padding="4dp"
+        android:scaleType="centerInside"
         android:src="@android:drawable/ic_menu_close_clear_cancel"
         android:contentDescription="Cerrar" />
 </LinearLayout>
