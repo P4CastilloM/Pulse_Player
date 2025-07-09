@@ -63,7 +63,7 @@ fun MusicScreen(navController: NavController) {
                         fontWeight = FontWeight.Bold
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black),
             )
         },
         bottomBar = {
@@ -72,13 +72,14 @@ fun MusicScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
             )
         },
-        containerColor = Color.Black
+        containerColor = Color.Black,
     ) { padding ->
         LazyColumn(
             contentPadding = padding,
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black)
+                .padding(WindowInsets.systemBars.asPaddingValues())
         ) {
             items(songs) { song ->
                 SongCardItem(
