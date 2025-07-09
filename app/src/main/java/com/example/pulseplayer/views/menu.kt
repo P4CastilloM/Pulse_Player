@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
@@ -30,16 +29,19 @@ import com.example.pulseplayer.Music
 import com.example.pulseplayer.PlaybackHistoryScreen
 import com.example.pulseplayer.PlaylistScreen
 import com.example.pulseplayer.R
+import com.example.pulseplayer.isLandscape
 import com.example.pulseplayer.ui.components.MiniPlayerBar
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.rememberReorderableLazyGridState
 import org.burnoutcrew.reorderable.reorderable
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MenuScreen(navController: NavController) {
+    //orientacion de la pantalla
+    val landscape = isLandscape()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -64,33 +66,69 @@ fun MenuScreen(navController: NavController) {
         },
         containerColor = Color.Black,
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(20.dp)
-        ) {
-            MusicCard(
-                title = stringResource(R.string.title_music),
-                icon = Icons.Default.MusicNote,
-                colors = listOf(Color(0xFFFF416C), Color(0xFFFF4B2B)),
-                onClick = { navController.navigate(Music) }
-            )
+        val modifier = Modifier.fillMaxSize().padding(innerPadding).padding(20.dp)
 
-            Spacer(modifier = Modifier.height(16.dp))
+        if (landscape) {
+            Row(
+                modifier = modifier,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                //musiccard a la izquierda
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    MusicCard(
+                        title = stringResource(R.string.title_music),
+                        icon = Icons.Default.MusicNote,
+                        colors = listOf(Color(0xFFFF416C), Color(0xFFFF4B2B)),
+                        onClick = { navController.navigate(Music) },
+                        modifier = Modifier
+                            .height(200.dp)
+                            .fillMaxWidth()
+                    )
+                }
+                //categorias ordenables a la derecha
+                Column(
+                    modifier = Modifier
+                        .weight(2f)
+                        .fillMaxHeight()
+                ) {
+                    ReorderableCategorySection(navController = navController)
+                }
+            }
+        } else {
+            Column(
+                modifier = modifier,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                MusicCard(
+                    title = stringResource(R.string.title_music),
+                    icon = Icons.Default.MusicNote,
+                    colors = listOf(Color(0xFFFF416C), Color(0xFFFF4B2B)),
+                    onClick = { navController.navigate(Music) }
+                )
 
-            ReorderableCategorySection(navController = navController)
+                ReorderableCategorySection(navController = navController)
 
+            }
         }
     }
 }
 
 @Composable
-fun MusicCard(title: String, icon: ImageVector, colors: List<Color>, onClick: () -> Unit) {
+fun MusicCard(
+    title: String,
+    icon: ImageVector,
+    colors: List<Color>,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+        .fillMaxWidth()
+        .height(100.dp)) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp)
+        modifier = modifier
             .background(
                 brush = Brush.horizontalGradient(colors),
                 shape = RoundedCornerShape(16.dp)
@@ -150,23 +188,25 @@ fun CategoryCard(
     }
 }
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ReorderableCategorySection(navController: NavController) {
     val items = remember { mutableStateListOf("Álbumes", "Listas", "Historial", "Favorito") }
+    val landscape = isLandscape()
 
     val state = rememberReorderableLazyGridState(onMove = { from, to ->
         val item = items.removeAt(from.index)
         items.add(to.index, item)
     })
 
+    val columns = if (landscape) 3 else 2 //si es horizontal 3 columnas, si es vertical 2
+
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(columns),
         state = state.gridState,
         modifier = Modifier
             .fillMaxWidth()
-            .height(240.dp)
+            .height(if (landscape) 200.dp else 240.dp)
             .reorderable(state)
             .detectReorderAfterLongPress(state),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -178,7 +218,7 @@ fun ReorderableCategorySection(navController: NavController) {
             ReorderableItem(state, key = title) {
                 val cardModifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(2f)
+                    .aspectRatio(if (landscape) 1.5f else 2f)
                     .animateItemPlacement()
 
                 CategoryCardDynamic(title = title, modifier = cardModifier, navController = navController)
@@ -186,7 +226,6 @@ fun ReorderableCategorySection(navController: NavController) {
         }
     }
 }
-
 
 @Composable
 fun CategoryCardDynamic(
@@ -218,5 +257,4 @@ fun CategoryCardDynamic(
         modifier = modifier,
         onClick = onClick
     )
-
 }

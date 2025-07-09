@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -74,7 +75,6 @@ fun MiniPlayerBar(navController: NavController, modifier: Modifier = Modifier) {
             .height(72.dp)
             .background(
                 brush = Brush.horizontalGradient(listOf(Color(0xFF833ab4), Color(0xFFfd1d1d), Color(0xFFfcb045))),
-                shape = RoundedCornerShape(16.dp)
             )
             .clickable {
                 navController.navigate(
@@ -103,14 +103,15 @@ fun MiniPlayerBar(navController: NavController, modifier: Modifier = Modifier) {
                     fontSize = 14.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.offset(y = (3).dp)
                 )
                 Text(
                     text = song.artistName,
-                    color = Color.Gray,
+                    color = Color.LightGray,
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-//                    modifier = Modifier.offset(y = (-8).dp)
+                    modifier = Modifier.offset(y = (-3).dp)
                 )
             }
 

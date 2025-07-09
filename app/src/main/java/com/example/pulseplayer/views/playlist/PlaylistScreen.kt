@@ -26,6 +26,7 @@ import com.example.pulseplayer.PlaylistCreateScreen
 import com.example.pulseplayer.PlaylistDetailScreen
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.entity.Playlist
+import com.example.pulseplayer.isLandscape
 import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlaylistViewModel
 
@@ -34,6 +35,7 @@ import com.example.pulseplayer.views.viewmodel.PlaylistViewModel
 fun PlaylistScreen(navController: NavController) {
     val viewModel: PlaylistViewModel = viewModel()
     val playlists by viewModel.playlists.collectAsState()
+    val landscape = isLandscape()
 
     Scaffold(
         topBar = {
@@ -55,13 +57,25 @@ fun PlaylistScreen(navController: NavController) {
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate(PlaylistCreateScreen) },
-                containerColor = Color(0xFF9C27B0),
-                contentColor = Color.White
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Crear lista")
+            if (landscape) {
+                FloatingActionButton(
+                    onClick = { navController.navigate(PlaylistCreateScreen) },
+                    containerColor = Color(0xFF9C27B0),
+                    contentColor = Color.White,
+                    modifier = Modifier.navigationBarsPadding(),
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Crear lista")
+                }
+            } else {
+                FloatingActionButton(
+                    onClick = { navController.navigate(PlaylistCreateScreen) },
+                    containerColor = Color(0xFF9C27B0),
+                    contentColor = Color.White,
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Crear lista")
+                }
             }
+
         },
         containerColor = Color.Black
     ) { padding ->
