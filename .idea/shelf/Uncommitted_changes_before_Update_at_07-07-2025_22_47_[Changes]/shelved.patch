@@ -1,0 +1,90 @@
+Index: app/src/main/java/com/example/pulseplayer/views/favorite/FavoriteScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/pulseplayer/views/favorite/FavoriteScreen.kt b/app/src/main/java/com/example/pulseplayer/views/favorite/FavoriteScreen.kt
+new file mode 100644
+--- /dev/null	(date 1751942793812)
++++ b/app/src/main/java/com/example/pulseplayer/views/favorite/FavoriteScreen.kt	(date 1751942793812)
+@@ -0,0 +1,80 @@
++package com.example.pulseplayer.views.favorite
++
++import androidx.compose.foundation.background
++import androidx.compose.foundation.clickable
++import androidx.compose.foundation.layout.*
++import androidx.compose.foundation.lazy.LazyColumn
++import androidx.compose.material.icons.Icons
++import androidx.compose.material.icons.filled.ArrowBack
++import androidx.compose.material3.*
++import androidx.compose.runtime.*
++import androidx.compose.ui.Alignment
++import androidx.compose.ui.Modifier
++import androidx.compose.ui.graphics.Brush
++import androidx.compose.ui.graphics.Color
++import androidx.compose.ui.text.font.FontWeight
++import androidx.compose.ui.unit.dp
++import androidx.compose.ui.unit.sp
++import androidx.navigation.NavController
++import com.example.pulseplayer.data.entity.Song
++import com.example.pulseplayer.views.viewmodel.PlayerViewModel
++
++@OptIn(ExperimentalMaterial3Api::class)
++@Composable
++fun FavoriteScreen(navController: NavController, viewModel: PlayerViewModel) {
++    val favorites by viewModel.favoriteSongs.collectAsState(initial = emptyList())
++
++    Scaffold(
++        topBar = {
++            TopAppBar(
++                title = { Text("Favoritos", color = Color.White) },
++                navigationIcon = {
++                    IconButton(onClick = { navController.popBackStack() }) {
++                        Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
++                    }
++                }
++            )
++        }
++    ) { padding ->
++        if (favorites.isEmpty()) {
++            Box(
++                modifier = Modifier
++                    .fillMaxSize()
++                    .padding(padding),
++                contentAlignment = Alignment.Center
++            ) {
++                Text("No tienes canciones favoritas aún.")
++            }
++        } else {
++            LazyColumn(
++                modifier = Modifier
++                    .fillMaxSize()
++                    .padding(padding)
++            ) {
++                items(favorites.size) { index ->
++                    val song = favorites[index]
++                    Box(
++                        modifier = Modifier
++                            .fillMaxWidth()
++                            .padding(8.dp)
++                            .clickable {
++                                viewModel.playSingleSong(song)
++                            }
++                            .background(
++                                brush = Brush.horizontalGradient(
++                                    listOf(Color(0xFFff6a00), Color(0xFFee0979))
++                                ),
++                                shape = MaterialTheme.shapes.medium
++                            )
++                            .padding(16.dp)
++                    ) {
++                        Column {
++                            Text(song.title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.White)
++                            Text(song.artistName, fontSize = 14.sp, color = Color.White)
++                        }
++                    }
++                }
++            }
++        }
++    }
++}
