@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.data.entity.Playlist
+import com.example.pulseplayer.ui.components.MiniPlayerBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -39,10 +40,16 @@ fun PlaylistCreateScreen(navController: NavController) {
                         Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
             )
         },
-        containerColor = Color.Black
+        bottomBar = {
+            MiniPlayerBar(
+                navController = navController,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(
             modifier = Modifier

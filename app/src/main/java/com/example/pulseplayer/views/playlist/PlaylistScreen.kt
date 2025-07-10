@@ -53,7 +53,7 @@ fun PlaylistScreen(navController: NavController) {
                         color = Color.White
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
                 // Mostrar icono de eliminación en la TopAppBar si una playlist está seleccionada
                 actions = {
                     selectedPlaylistIdForDeletion?.let {
@@ -95,8 +95,9 @@ fun PlaylistScreen(navController: NavController) {
                     }
                 }
             }
+
         },
-        containerColor = Color.Black
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(
             modifier = Modifier
@@ -111,7 +112,7 @@ fun PlaylistScreen(navController: NavController) {
                 ) {
                     Text(
                         text = stringResource(R.string.playlist_empty_message),
-                        color = Color.LightGray,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 16.sp
                     )
                 }

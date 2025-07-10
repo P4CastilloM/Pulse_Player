@@ -29,6 +29,7 @@ import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.data.entity.PlaybackHistory
 import com.example.pulseplayer.data.entity.Song
 import com.example.pulseplayer.ui.components.DeleteConfirmationDialog
+import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -66,21 +67,26 @@ fun PlaybackHistoryScreen(navController: NavController, playerViewModel: PlayerV
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Historial", color = Color.White) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = Color.White)
-                    }
-                },
+                title = { Text(
+                    "Historial",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    ) },
                 actions = {
                     IconButton(onClick = { showConfirmDialog = true }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Eliminar historial", tint = Color.White)
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar historial", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
             )
         },
-        containerColor = Color.Black
+        bottomBar = {
+            MiniPlayerBar(
+                navController = navController,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -130,7 +136,7 @@ fun HistorySongCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val borderColor = if (isSelected) Color(0xFFff9800) else Color.Transparent
+    val borderColor = if (isSelected) Color(0xFF9C27B0) else Color.Transparent
     val borderWidth = if (isSelected) 2.dp else 0.dp
 
     Row(
@@ -138,7 +144,7 @@ fun HistorySongCard(
             .fillMaxWidth()
             .padding(vertical = 6.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF121212))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .border(
                 width = borderWidth,
                 color = borderColor,
@@ -171,13 +177,13 @@ fun HistorySongCard(
         Column {
             Text(
                 text = song.title,
-                color = Color.White,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = formatDateShort(playedAt),
-                color = Color.Gray,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

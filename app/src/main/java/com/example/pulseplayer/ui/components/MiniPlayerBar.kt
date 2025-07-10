@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -74,7 +75,7 @@ fun MiniPlayerBar(navController: NavController, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .height(72.dp)
             .background(
-                brush = Brush.horizontalGradient(listOf(Color(0xFF833ab4), Color(0xFFfd1d1d), Color(0xFFfcb045))),
+                MaterialTheme.colorScheme.primary
             )
             .clickable {
                 navController.navigate(
@@ -99,19 +100,19 @@ fun MiniPlayerBar(navController: NavController, modifier: Modifier = Modifier) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
                 Text(
                     song.title,
-                    color = Color.White,
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.offset(y = (3).dp)
+//                    modifier = Modifier.offset(y = (3).dp)
                 )
                 Text(
                     text = song.artistName,
-                    color = Color.LightGray,
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.offset(y = (-3).dp)
+//                    modifier = Modifier.offset(y = (-3).dp)
                 )
             }
 
@@ -121,7 +122,7 @@ fun MiniPlayerBar(navController: NavController, modifier: Modifier = Modifier) {
                 Icon(
                     imageVector = if (isPlaying.value) Icons.Default.Pause else Icons.Default.PlayArrow,
                     contentDescription = null,
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
         }

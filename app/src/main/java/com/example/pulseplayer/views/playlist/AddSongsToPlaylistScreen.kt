@@ -32,6 +32,8 @@ import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.data.entity.PlaylistSong
 import com.example.pulseplayer.data.entity.Song
+import com.example.pulseplayer.isLandscape
+import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel // Puede que necesites este si MiniPlayerBar lo usa
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -62,65 +64,94 @@ fun AddSongsToPlaylistScreen(navController: NavController, playlistId: Int) {
                 title = {
                     Text(
                         text = stringResource(R.string.playlist_add_song),
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimary,
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack, // Usar imageVector
-                            contentDescription = "Volver",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
             )
         },
         floatingActionButton = {
             val isFabEnabled = selectedSongs.isNotEmpty()
 
-            FloatingActionButton(
-                onClick = {
-                    if (isFabEnabled) {
-                        scope.launch(Dispatchers.IO) { // Ejecuta la inserción en el hilo de fondo
-                            var currentOrder = 0
+            if (isLandscape()) {
+                FloatingActionButton(
+                    onClick = {
+                        if (isFabEnabled) {
+                            scope.launch(Dispatchers.IO) { // Ejecuta la inserción en el hilo de fondo
+                                var currentOrder = 0
 
-                            selectedSongs.forEach { song ->
-                                playlistSongDao.insert(
-                                    PlaylistSong(
-                                        playlistId = playlistId,
-                                        songId = song.idSong,
-                                        songOrder = currentOrder++
+                                selectedSongs.forEach { song ->
+                                    playlistSongDao.insert(
+                                        PlaylistSong(
+                                            playlistId = playlistId,
+                                            songId = song.idSong,
+                                            songOrder = currentOrder++
+                                        )
                                     )
-                                )
-                            }
-                            // Después de la operación de base de datos, cambia al hilo principal para navegar
-                            withContext(Dispatchers.Main) {
-                                navController.popBackStack() // <<<<<<<<<<<<<< AHORA EN EL HILO PRINCIPAL
+                                }
+                                // Después de la operación de base de datos, cambia al hilo principal para navegar
+                                withContext(Dispatchers.Main) {
+                                    navController.popBackStack() // <<<<<<<<<<<<<< AHORA EN EL HILO PRINCIPAL
+                                }
                             }
                         }
-                    }
-                },
-                containerColor = Color(0xFF9C27B0),
-                contentColor = Color.White,
-                //enabled = isFabEnabled // Asegúrate de que esta propiedad exista en tu Material3
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check, // Usar imageVector
-                    contentDescription = "Añadir seleccionadas"
-                )
+                    },
+                    containerColor = Color(0xFF9C27B0),
+                    contentColor = Color.White,
+                    modifier = Modifier.navigationBarsPadding(),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check, // Usar imageVector
+                        contentDescription = "Añadir seleccionadas"
+                    )
+                }
+            } else {
+                FloatingActionButton(
+                    onClick = {
+                        if (isFabEnabled) {
+                            scope.launch(Dispatchers.IO) { // Ejecuta la inserción en el hilo de fondo
+                                var currentOrder = 0
+
+                                selectedSongs.forEach { song ->
+                                    playlistSongDao.insert(
+                                        PlaylistSong(
+                                            playlistId = playlistId,
+                                            songId = song.idSong,
+                                            songOrder = currentOrder++
+                                        )
+                                    )
+                                }
+                                // Después de la operación de base de datos, cambia al hilo principal para navegar
+                                withContext(Dispatchers.Main) {
+                                    navController.popBackStack() // <<<<<<<<<<<<<< AHORA EN EL HILO PRINCIPAL
+                                }
+                            }
+                        }
+                    },
+                    containerColor = Color(0xFF9C27B0),
+                    contentColor = Color.White,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check, // Usar imageVector
+                        contentDescription = "Añadir seleccionadas"
+                    )
+                }
             }
-        }, // <<<<<<<<<<<<<< CIERRE DE LA LAMBDA floatingActionButton DEL SCAFFOLD >>>>>>>>>>>>>>>
-        containerColor = Color.Black
+        },
+        bottomBar = {
+            MiniPlayerBar(
+                navController = navController,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color.Black)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (allSongs.isEmpty()) {
                 Box(
@@ -129,8 +160,8 @@ fun AddSongsToPlaylistScreen(navController: NavController, playlistId: Int) {
                 ) {
                     Text(
                         text = "No hay canciones disponibles.",
-                        color = Color.LightGray,
-                        fontSize = 16.sp
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             } else {
@@ -175,7 +206,7 @@ fun SelectableSongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit)
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .border(2.dp, borderColor, shape = RoundedCornerShape(16.dp))
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
@@ -200,8 +231,16 @@ fun SelectableSongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit)
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(song.title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text(song.artistName, color = Color.LightGray, fontSize = 14.sp)
+                Text(
+                    text = song.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = song.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
             }
 
             if (isSelected) {
@@ -213,7 +252,11 @@ fun SelectableSongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit)
                 )
             }
 
-            Text(song.formattedDuration, color = Color.White, fontSize = 14.sp)
+            Text(
+                text = song.formattedDuration,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
         }
     }
 }

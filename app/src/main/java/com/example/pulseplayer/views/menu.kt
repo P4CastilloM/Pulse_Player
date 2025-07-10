@@ -48,13 +48,12 @@ fun MenuScreen(navController: NavController) {
                 title = {
                     Text(
                         text = stringResource(R.string.app_name),
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimary,
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Black
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             )
         },
@@ -64,7 +63,7 @@ fun MenuScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
             )
         },
-        containerColor = Color.Black,
+        containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         val modifier = Modifier.fillMaxSize().padding(innerPadding).padding(20.dp)
 
@@ -145,9 +144,8 @@ fun MusicCard(
             )
             Text(
                 text = title,
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimary,
             )
         }
     }
@@ -180,9 +178,8 @@ fun CategoryCard(
             )
             Text(
                 text = title,
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onPrimary,
             )
         }
     }

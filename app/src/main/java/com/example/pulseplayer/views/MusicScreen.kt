@@ -54,12 +54,11 @@ fun MusicScreen(navController: NavController) {
                 title = {
                     Text(
                         text = stringResource(R.string.title_music),
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimary,
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
             )
         },
         bottomBar = {
@@ -68,13 +67,13 @@ fun MusicScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
             )
         },
-        containerColor = Color.Black,
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         LazyColumn(
             contentPadding = padding,
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(WindowInsets.systemBars.asPaddingValues())
         ) {
             items(songs) { song ->
@@ -82,7 +81,6 @@ fun MusicScreen(navController: NavController) {
                     song = song,
                     isSelected = playerViewModel.currentSong.value?.idSong == song.idSong,
                     onClick = {
-//                        playerViewModel.playSong(song) //reproducir la canción seleccionada
                         val allSongIds = songs.map { it.idSong } //navegar a la pantalla de reproducción
                         val startIndex = songs.indexOfFirst { it.idSong == song.idSong }
                         playerViewModel.playPlaylist(songs, startIndex)
@@ -110,7 +108,7 @@ fun SongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit) {
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .border(2.dp, borderColor, shape = RoundedCornerShape(16.dp))
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
@@ -135,11 +133,23 @@ fun SongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(song.title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text(song.artistName, color = Color.LightGray, fontSize = 14.sp)
+                Text(
+                    text = song.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = song.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
             }
 
-            Text(song.formattedDuration, color = Color.White, fontSize = 14.sp)
+            Text(
+                text = song.formattedDuration,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
         }
     }
 }

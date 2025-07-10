@@ -91,4 +91,6 @@ dependencies {
     implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
     implementation ("androidx.media:media:1.6.0")
 
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.6.8")
+
 }

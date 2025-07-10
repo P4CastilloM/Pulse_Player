@@ -76,7 +76,7 @@ fun PlaylistDetailsScreen(navController: NavController, playlistId: Int) {
                         fontWeight = FontWeight.Bold
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
             )
         },
         // ¡Añade el FloatingActionButton aquí!
@@ -98,13 +98,13 @@ fun PlaylistDetailsScreen(navController: NavController, playlistId: Int) {
                 modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
             )
         },
-        containerColor = Color.Black
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color.Black)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (songs.isEmpty()) {
                 Box(
