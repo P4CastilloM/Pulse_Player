@@ -13,23 +13,28 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.example.pulseplayer.data.PulsePlayerDatabase
+import com.example.pulseplayer.data.entity.Song
 import com.example.pulseplayer.ui.theme.PulsePlayerTheme
 import com.example.pulseplayer.util.MusicScanner
 import com.example.pulseplayer.views.AppLifecycleObserver
 import com.example.pulseplayer.views.player.ExoPlayerManager
 import com.example.pulseplayer.views.service.MusicPlayerService
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val database = PulsePlayerDatabase.getDatabase(applicationContext)
 
         // 👉 Solicita permisos necesarios al iniciar
         requestAllPermissions()
@@ -53,7 +58,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PulsePlayerTheme {
-                PulsePlayerApp()
+                PulsePlayerApp(database)
             }
         }
     }
@@ -88,11 +93,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun PulsePlayerApp() {
+fun PulsePlayerApp(database: PulsePlayerDatabase) {
     val context = LocalContext.current
+    val songsState = remember { mutableStateOf<List<Song>>(emptyList()) }
 
     LaunchedEffect(Unit) {
-        // ⚠️ Esperamos hasta que el usuario haya respondido los permisos
         var retries = 10
         while (!hasStoragePermission(context) && retries > 0) {
             kotlinx.coroutines.delay(500)
@@ -105,22 +110,24 @@ fun PulsePlayerApp() {
         }
 
         try {
+            database.openHelper.writableDatabase
             withContext(Dispatchers.IO) {
-                val dao = PulsePlayerDatabase.getDatabase(context).songDao()
+                val dao = database.songDao()
                 MusicScanner.scanAndSyncSongs(context, dao)
+                songsState.value = dao.getAll().first()
                 Log.d("PulsePlayer", "✅ Canciones escaneadas correctamente")
             }
-        } catch (e: SecurityException) {
-            Log.e("PulsePlayer", "❌ SecurityException: ${e.message}")
         } catch (e: Exception) {
             Log.e("PulsePlayer", "❌ Error escaneando canciones: ${e.message}")
         }
     }
 
     PulsePlayerTheme {
-        Navigation()
+        Navigation(songs = songsState.value) // ✅ se pasan aquí
     }
 }
+
+
 
 private fun hasStoragePermission(context: Context): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

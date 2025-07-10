@@ -32,6 +32,7 @@ import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.data.entity.Song
 import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
+import com.example.pulseplayer.views.viewmodel.SongViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
@@ -41,16 +42,11 @@ import kotlinx.coroutines.flow.first
 fun MusicScreen(navController: NavController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
-    var selectedSongId by remember { mutableStateOf<Int?>(null) }
+    val songViewModel: SongViewModel = viewModel()
+    val songs by songViewModel.allSongs.collectAsState()
     val playerViewModel: PlayerViewModel = viewModel()
+    var selectedSongId by remember { mutableStateOf<Int?>(null) }
 
-    LaunchedEffect(Unit) {
-        scope.launch(Dispatchers.IO) {
-            val dao = PulsePlayerDatabase.getDatabase(context).songDao()
-            songs = dao.getAll().first()
-        }
-    }
 
     Scaffold(
         topBar = {

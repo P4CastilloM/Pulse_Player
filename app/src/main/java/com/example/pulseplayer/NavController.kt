@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.example.pulseplayer.data.entity.Song
 import com.example.pulseplayer.views.MenuScreen
 import com.example.pulseplayer.views.MusicScreen
 import com.example.pulseplayer.views.favorite.FavoriteScreen
@@ -54,7 +55,7 @@ object FavoriteScreen
 
 
 @Composable
-fun Navigation(){
+fun Navigation(songs: List<Song>){
     val navController = rememberNavController()
     val playerViewModel: PlayerViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
@@ -63,7 +64,7 @@ fun Navigation(){
             MenuScreen(navController = navController)
         }
         composable<Music> {
-            MusicScreen(navController = navController)
+            MusicScreen(navController = navController) // ✅ corregido
         }
         composable<NowPlaying> { backStackEntry ->
             val args = backStackEntry.toRoute<NowPlaying>()

@@ -18,8 +18,7 @@ import androidx.room.PrimaryKey
         ForeignKey(
             entity = Song::class,
             parentColumns = ["id_song"],
-            childColumns = ["id_song"],
-            onDelete = ForeignKey.CASCADE // <--- opcional: elimina esta fila si se elimina la canción
+            childColumns = ["id_song"]
         )
     ],
     indices = [Index("playlist_id"), Index("id_song")]
