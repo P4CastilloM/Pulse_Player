@@ -1,0 +1,141 @@
+Index: app/src/main/java/com/example/pulseplayer/views/favorite/FavoriteScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/pulseplayer/views/favorite/FavoriteScreen.kt b/app/src/main/java/com/example/pulseplayer/views/favorite/FavoriteScreen.kt
+new file mode 100644
+--- /dev/null	(date 1751948725112)
++++ b/app/src/main/java/com/example/pulseplayer/views/favorite/FavoriteScreen.kt	(date 1751948725112)
+@@ -0,0 +1,59 @@
++package com.example.pulseplayer.views.favorite
++
++import androidx.compose.foundation.layout.*
++import androidx.compose.material.icons.Icons
++import androidx.compose.material.icons.filled.ArrowBack
++import androidx.compose.material3.*
++import androidx.compose.runtime.Composable
++import androidx.compose.ui.Alignment
++import androidx.compose.ui.Modifier
++import androidx.compose.ui.graphics.Color
++import androidx.compose.ui.text.font.FontWeight
++import androidx.compose.ui.unit.dp
++import androidx.compose.ui.unit.sp
++import androidx.navigation.NavController
++
++@OptIn(ExperimentalMaterial3Api::class)
++@Composable
++fun FavoriteScreen(navController: NavController) {
++    Scaffold(
++        topBar = {
++            TopAppBar(
++                title = {
++                    Text(
++                        text = "Favoritos",
++                        color = Color.White,
++                        fontSize = 22.sp,
++                        fontWeight = FontWeight.Bold
++                    )
++                },
++                navigationIcon = {
++                    IconButton(onClick = { navController.popBackStack() }) {
++                        Icon(
++                            imageVector = Icons.Default.ArrowBack,
++                            contentDescription = "Volver",
++                            tint = Color.White
++                        )
++                    }
++                },
++                colors = TopAppBarDefaults.topAppBarColors(
++                    containerColor = Color.Black
++                )
++            )
++        },
++        containerColor = Color.Black
++    ) { padding ->
++        Box(
++            modifier = Modifier
++                .fillMaxSize()
++                .padding(padding),
++            contentAlignment = Alignment.Center
++        ) {
++            Text(
++                text = "Presione el botón ❤️ para agregar canciones a favoritos",
++                color = Color.White,
++                fontSize = 16.sp
++            )
++        }
++    }
++}
+Index: app/src/main/java/com/example/pulseplayer/views/menu.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.pulseplayer.views\r\n\r\nimport androidx.compose.foundation.ExperimentalFoundationApi\r\nimport androidx.compose.foundation.background\r\nimport androidx.compose.foundation.clickable\r\nimport androidx.compose.foundation.layout.*\r\nimport androidx.compose.foundation.lazy.grid.GridCells\r\nimport androidx.compose.foundation.lazy.grid.LazyVerticalGrid\r\nimport androidx.compose.foundation.shape.RoundedCornerShape\r\nimport androidx.compose.material3.*\r\nimport androidx.compose.material.icons.Icons\r\nimport androidx.compose.material.icons.filled.MusicNote\r\nimport androidx.compose.material.icons.filled.PlayArrow\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.compose.runtime.mutableStateListOf\r\nimport androidx.compose.runtime.remember\r\nimport androidx.compose.ui.Alignment\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.compose.ui.graphics.Brush\r\nimport androidx.compose.ui.graphics.Color\r\nimport androidx.compose.ui.graphics.vector.ImageVector\r\nimport androidx.compose.ui.res.painterResource\r\nimport androidx.compose.ui.text.font.FontWeight\r\nimport androidx.compose.ui.unit.dp\r\nimport androidx.compose.ui.unit.sp\r\nimport androidx.navigation.NavController\r\nimport com.example.pulseplayer.Music\r\nimport com.example.pulseplayer.PlaybackHistoryScreen\r\nimport com.example.pulseplayer.PlaylistScreen\r\nimport com.example.pulseplayer.R\r\nimport com.example.pulseplayer.ui.components.MiniPlayerBar\r\nimport org.burnoutcrew.reorderable.ReorderableItem\r\nimport org.burnoutcrew.reorderable.detectReorderAfterLongPress\r\nimport org.burnoutcrew.reorderable.rememberReorderableLazyGridState\r\nimport org.burnoutcrew.reorderable.reorderable\r\n\r\n\r\n@OptIn(ExperimentalMaterial3Api::class)\r\n@Composable\r\nfun MenuScreen(navController: NavController) {\r\n    Scaffold(\r\n        topBar = {\r\n            TopAppBar(\r\n                title = {\r\n                    Text(\r\n                        text = \"PulsePlayer\",\r\n                        color = Color.White,\r\n                        fontSize = 24.sp,\r\n                        fontWeight = FontWeight.Bold\r\n                    )\r\n                },\r\n                colors = TopAppBarDefaults.topAppBarColors(\r\n                    containerColor = Color.Black\r\n                )\r\n            )\r\n        },\r\n        bottomBar = {\r\n            MiniPlayerBar(\r\n                navController = navController,\r\n                modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),\r\n            )\r\n        },\r\n        containerColor = Color.Black,\r\n    ) { innerPadding ->\r\n        Column(\r\n            modifier = Modifier\r\n                .fillMaxSize()\r\n                .padding(innerPadding)\r\n                .padding(20.dp)\r\n        ) {\r\n            MusicCard(\r\n                title = \"Música\",\r\n                icon = Icons.Default.MusicNote,\r\n                colors = listOf(Color(0xFFFF416C), Color(0xFFFF4B2B)),\r\n                onClick = { navController.navigate(Music) }\r\n            )\r\n\r\n            Spacer(modifier = Modifier.height(16.dp))\r\n\r\n            ReorderableCategorySection(navController = navController)\r\n\r\n            SongCard(\r\n                title = \"Blinding Lights\",\r\n                artist = \"The Weeknd\",\r\n                colors = listOf(Color(0xFF833ab4), Color(0xFFfd1d1d), Color(0xFFfcb045))\r\n            )\r\n        }\r\n    }\r\n}\r\n\r\n@Composable\r\nfun MusicCard(title: String, icon: ImageVector, colors: List<Color>, onClick: () -> Unit) {\r\n    Box(\r\n        modifier = Modifier\r\n            .fillMaxWidth()\r\n            .height(100.dp)\r\n            .background(\r\n                brush = Brush.horizontalGradient(colors),\r\n                shape = RoundedCornerShape(16.dp)\r\n            )\r\n            .clickable(onClick = onClick),\r\n        contentAlignment = Alignment.Center\r\n    ) {\r\n        Column(horizontalAlignment = Alignment.CenterHorizontally) {\r\n            Icon(\r\n                imageVector = icon,\r\n                contentDescription = null,\r\n                tint = Color.White,\r\n                modifier = Modifier.size(36.dp)\r\n            )\r\n            Text(\r\n                text = title,\r\n                color = Color.White,\r\n                fontSize = 18.sp,\r\n                fontWeight = FontWeight.Bold\r\n            )\r\n        }\r\n    }\r\n}\r\n\r\n@Composable\r\nfun CategoryCard(\r\n    title: String,\r\n    iconId: Int,\r\n    colors: List<Color>,\r\n    modifier: Modifier,\r\n    onClick: () -> Unit\r\n){\r\n    Box(\r\n        modifier = modifier\r\n            .height(100.dp)\r\n            .background(\r\n                brush = Brush.horizontalGradient(colors),\r\n                shape = RoundedCornerShape(16.dp)\r\n            )\r\n            .clickable { onClick() },  // ✅ ejecuta el onClick real\r\n        contentAlignment = Alignment.Center\r\n    ) {\r\n        Column(horizontalAlignment = Alignment.CenterHorizontally) {\r\n            Icon(\r\n                painter = painterResource(id = iconId),\r\n                contentDescription = null,\r\n                tint = Color.White,\r\n                modifier = Modifier.size(36.dp)\r\n            )\r\n            Text(\r\n                text = title,\r\n                color = Color.White,\r\n                fontSize = 16.sp,\r\n                fontWeight = FontWeight.Bold\r\n            )\r\n        }\r\n    }\r\n}\r\n\r\n@Composable\r\nfun SongCard(title: String, artist: String, colors: List<Color>) {\r\n    Box(\r\n        modifier = Modifier\r\n            .fillMaxWidth()\r\n            .height(100.dp)\r\n            .background(\r\n                brush = Brush.horizontalGradient(colors),\r\n                shape = RoundedCornerShape(16.dp)\r\n            )\r\n            .clickable { },\r\n        contentAlignment = Alignment.CenterStart\r\n    ) {\r\n        Row(\r\n            modifier = Modifier\r\n                .fillMaxSize()\r\n                .padding(horizontal = 16.dp),\r\n            verticalAlignment = Alignment.CenterVertically,\r\n            horizontalArrangement = Arrangement.SpaceBetween\r\n        ) {\r\n            Column {\r\n                Text(\r\n                    text = title,\r\n                    color = Color.White,\r\n                    fontSize = 18.sp,\r\n                    fontWeight = FontWeight.Bold\r\n                )\r\n                Text(\r\n                    text = artist,\r\n                    color = Color.White,\r\n                    fontSize = 14.sp\r\n                )\r\n            }\r\n            Icon(\r\n                imageVector = Icons.Default.PlayArrow,\r\n                contentDescription = null,\r\n                tint = Color.White,\r\n                modifier = Modifier.size(40.dp)\r\n            )\r\n        }\r\n    }\r\n}\r\n@OptIn(ExperimentalFoundationApi::class)\r\n@Composable\r\nfun ReorderableCategorySection(navController: NavController) {\r\n    val items = remember { mutableStateListOf(\"Álbumes\", \"Listas\", \"Historial\", \"Favorito\") }\r\n\r\n    val state = rememberReorderableLazyGridState(onMove = { from, to ->\r\n        val item = items.removeAt(from.index)\r\n        items.add(to.index, item)\r\n    })\r\n\r\n    LazyVerticalGrid(\r\n        columns = GridCells.Fixed(2),\r\n        state = state.gridState,\r\n        modifier = Modifier\r\n            .fillMaxWidth()\r\n            .height(240.dp)\r\n            .reorderable(state)\r\n            .detectReorderAfterLongPress(state),\r\n        horizontalArrangement = Arrangement.spacedBy(16.dp),\r\n        verticalArrangement = Arrangement.spacedBy(16.dp),\r\n        contentPadding = PaddingValues(bottom = 8.dp)\r\n    ) {\r\n        items(items.size, { items[it] }) { index ->\r\n            val title = items[index]\r\n            ReorderableItem(state, key = title) {\r\n                val cardModifier = Modifier\r\n                    .fillMaxWidth()\r\n                    .aspectRatio(2f)\r\n                    .animateItemPlacement()\r\n\r\n                CategoryCardDynamic(title = title, modifier = cardModifier, navController = navController)\r\n            }\r\n        }\r\n    }\r\n}\r\n\r\n\r\n@Composable\r\nfun CategoryCardDynamic(\r\n    title: String,\r\n    modifier: Modifier = Modifier,\r\n    navController: NavController? = null\r\n) {\r\n    val (iconId, colors) = when (title) {\r\n        \"Álbumes\" -> R.drawable.ic_album to listOf(Color(0xFF2193b0), Color(0xFF6dd5ed))\r\n        \"Listas\" -> R.drawable.ic_category to listOf(Color(0xFF56ab2f), Color(0xFFA8E063))\r\n        \"Historial\" -> R.drawable.ic_history to listOf(Color(0xFF7F00FF), Color(0xFFE100FF))\r\n        \"Favorito\" -> R.drawable.ic_favorite to listOf(Color(0xFFff6a00), Color(0xFFee0979))\r\n        else -> R.drawable.ic_album to listOf(Color.Gray, Color.LightGray)\r\n    }\r\n\r\n    val onClick: () -> Unit = {\r\n        when (title) {\r\n            \"Listas\" -> navController?.navigate(PlaylistScreen)\r\n            \"Historial\" -> navController?.navigate(PlaybackHistoryScreen)\r\n            else -> {} // necesario para ser exhaustivo\r\n        }\r\n    }\r\n\r\n\r\n\r\n    CategoryCard(\r\n        title = title,\r\n        iconId = iconId,\r\n        colors = colors,\r\n        modifier = modifier,\r\n        onClick = onClick\r\n    )\r\n\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/pulseplayer/views/menu.kt b/app/src/main/java/com/example/pulseplayer/views/menu.kt
+--- a/app/src/main/java/com/example/pulseplayer/views/menu.kt	(revision 29947cd983cc720a2532f5075e75b4d07e0aa10a)
++++ b/app/src/main/java/com/example/pulseplayer/views/menu.kt	(date 1751948725113)
+@@ -24,6 +24,7 @@
+ import androidx.compose.ui.unit.dp
+ import androidx.compose.ui.unit.sp
+ import androidx.navigation.NavController
++import com.example.pulseplayer.FavoriteScreen
+ import com.example.pulseplayer.Music
+ import com.example.pulseplayer.PlaybackHistoryScreen
+ import com.example.pulseplayer.PlaylistScreen
+@@ -250,9 +251,11 @@
+         when (title) {
+             "Listas" -> navController?.navigate(PlaylistScreen)
+             "Historial" -> navController?.navigate(PlaybackHistoryScreen)
+-            else -> {} // necesario para ser exhaustivo
++            "Favorito" -> navController?.navigate(FavoriteScreen) // 🔸 Aquí se agregó
++            else -> {}
+         }
+     }
++
+ 
+ 
+ 
+Index: app/src/main/java/com/example/pulseplayer/NavController.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.pulseplayer\r\n\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.navigation.compose.NavHost\r\nimport androidx.navigation.compose.composable\r\nimport androidx.navigation.compose.rememberNavController\r\nimport androidx.navigation.toRoute\r\nimport com.example.pulseplayer.views.MenuScreen\r\nimport com.example.pulseplayer.views.MusicScreen\r\nimport com.example.pulseplayer.views.player.NowPlayingScreen\r\nimport com.example.pulseplayer.views.playbackhistory.PlaybackHistoryScreen\r\nimport com.example.pulseplayer.views.playlist.PlaylistCreateScreen\r\nimport com.example.pulseplayer.views.playlist.PlaylistScreen\r\nimport com.example.pulseplayer.views.viewmodel.PlayerViewModel\r\nimport kotlinx.serialization.Serializable\r\n\r\n//PRINCIPAL\r\n@Serializable\r\nobject Menu\r\n\r\n// MUSICA\r\n@Serializable\r\nobject Music\r\n\r\n@Serializable\r\ndata class NowPlaying(val songId: Int, val songIds: List<Int> )\r\n\r\n//PLAYLIST\r\n@Serializable\r\nobject PlaylistScreen\r\n\r\n@Serializable\r\nobject PlaylistCreateScreen\r\n\r\n@Serializable\r\ndata class PlaylistDetailScreen(val playlistId: Int)\r\n\r\n//PlaybackHistory\r\n@Serializable\r\nobject PlaybackHistoryScreen\r\n\r\n@Composable\r\nfun Navigation(){\r\n    val navController = rememberNavController()\r\n    val playerViewModel: PlayerViewModel = androidx.lifecycle.viewmodel.compose.viewModel()\r\n\r\n    NavHost(navController = navController, startDestination = Menu){\r\n        composable<Menu>{\r\n            MenuScreen(navController = navController)\r\n        }\r\n        composable<Music> {\r\n            MusicScreen(navController = navController)\r\n        }\r\n        composable<NowPlaying> { backStackEntry ->\r\n            val args = backStackEntry.toRoute<NowPlaying>()\r\n            NowPlayingScreen(navController = navController, songId = args.songId, songIds = args.songIds,viewModel = playerViewModel)\r\n        }\r\n        composable<PlaylistScreen> {\r\n            PlaylistScreen(navController)\r\n        }\r\n        composable<PlaylistCreateScreen> {\r\n            PlaylistCreateScreen(navController)\r\n        }\r\n        // composable<PlaylistDetailScreen> { backStackEntry ->\r\n        //     val args = backStackEntry.toRoute<PlaylistDetailScreen>()\r\n        //     PlaylistDetailScreen(navController, playlistId = args.playlistId)\r\n        // }\r\n\r\n        composable<PlaybackHistoryScreen> {\r\n            PlaybackHistoryScreen(navController, playerViewModel = playerViewModel)\r\n        }\r\n\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/pulseplayer/NavController.kt b/app/src/main/java/com/example/pulseplayer/NavController.kt
+--- a/app/src/main/java/com/example/pulseplayer/NavController.kt	(revision 29947cd983cc720a2532f5075e75b4d07e0aa10a)
++++ b/app/src/main/java/com/example/pulseplayer/NavController.kt	(date 1751948725111)
+@@ -7,6 +7,7 @@
+ import androidx.navigation.toRoute
+ import com.example.pulseplayer.views.MenuScreen
+ import com.example.pulseplayer.views.MusicScreen
++import com.example.pulseplayer.views.favorite.FavoriteScreen
+ import com.example.pulseplayer.views.player.NowPlayingScreen
+ import com.example.pulseplayer.views.playbackhistory.PlaybackHistoryScreen
+ import com.example.pulseplayer.views.playlist.PlaylistCreateScreen
+@@ -39,6 +40,10 @@
+ @Serializable
+ object PlaybackHistoryScreen
+ 
++//FAVORITE
++@Serializable
++object FavoriteScreen
++
+ @Composable
+ fun Navigation(){
+     val navController = rememberNavController()
+@@ -70,5 +75,10 @@
+             PlaybackHistoryScreen(navController, playerViewModel = playerViewModel)
+         }
+ 
++
++        composable<FavoriteScreen> {
++            FavoriteScreen(navController = navController)
++        }
++
+     }
+ }
+\ No newline at end of file
