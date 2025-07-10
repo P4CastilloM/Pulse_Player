@@ -237,7 +237,7 @@ fun SelectableSongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit)
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = song.title,
+                    text = song.artistName,
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )

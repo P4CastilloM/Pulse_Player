@@ -1,5 +1,6 @@
 package com.example.pulseplayer.views
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,6 +57,7 @@ fun MenuScreen(navController: NavController) {
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             )
+            Log.d("Color:","${MaterialTheme.colorScheme.primary}")
         },
         bottomBar = {
             MiniPlayerBar(
