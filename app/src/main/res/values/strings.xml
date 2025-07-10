@@ -6,6 +6,7 @@
     <string name="title_playlists">Listas</string>
     <string name="title_history">Historial</string>
     <string name="title_favorites">Favorito</string>
+    <string name="playing_music">Reproduciendo</string>
 
     <!-- Pantalla: Listas -->
     <string name="playlist_screen_title">Listas de Reproducción</string>

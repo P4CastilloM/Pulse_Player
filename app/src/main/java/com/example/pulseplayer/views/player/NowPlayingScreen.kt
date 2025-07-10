@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -104,17 +105,15 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
         }
     }
 
-
-
     // Muestra un indicador de carga si no hay ninguna canción cargada
     if (currentSong == null) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black),
+                .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = Color.White)
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.onSurface)
         }
         return
     }
@@ -122,12 +121,18 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
     val isPlaying by viewModel.isPlaying // Observa el estado de reproducción del ViewModel
 
     Scaffold(
-        containerColor = Color.Black,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = {},
+                title = {
+                    Text(
+                        text = stringResource(R.string.playing_music),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Black
+                    containerColor = MaterialTheme.colorScheme.primary
                 ),
                 actions = {
                     IconButton(onClick = {
@@ -136,7 +141,10 @@ fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<In
                         Icon(
                             imageVector = Icons.Default.Favorite,
                             contentDescription = "Favorito",
-                            tint = if (isFavorite) Color.Red else Color.White
+                            tint = if (isFavorite)
+                                MaterialTheme.colorScheme.error
+                            else
+                                MaterialTheme.colorScheme.onPrimary
                         )
                     }
 
@@ -242,8 +250,8 @@ fun PlaybackControls(isPlaying: Boolean, canPlayPrevious: Boolean, canPlayNext: 
             Icon(
                 imageVector = Icons.Default.Shuffle,
                 contentDescription = "Aleatorio",
-                tint = if (isShuffleEnabled) Color.Cyan else Color.White,
-                modifier = Modifier.size(28.dp)
+                tint = if (isShuffleEnabled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(28.dp),
             )
         }
 
@@ -251,7 +259,7 @@ fun PlaybackControls(isPlaying: Boolean, canPlayPrevious: Boolean, canPlayNext: 
             onClick = { viewModel.playPrevious() },
             enabled = canPlayPrevious
         ) {
-            Icon(Icons.Default.SkipPrevious, contentDescription = "Anterior", tint = Color.White, modifier = Modifier.size(36.dp))
+            Icon(Icons.Default.SkipPrevious, contentDescription = "Anterior", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(36.dp))
         }
 
         IconButton(onClick = {
@@ -260,7 +268,7 @@ fun PlaybackControls(isPlaying: Boolean, canPlayPrevious: Boolean, canPlayNext: 
             Icon(
                 imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                 contentDescription = "Play/Pause",
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(64.dp)
             )
         }
@@ -269,14 +277,14 @@ fun PlaybackControls(isPlaying: Boolean, canPlayPrevious: Boolean, canPlayNext: 
             onClick = { viewModel.playNext() },
             enabled = canPlayNext
         ) {
-            Icon(Icons.Default.SkipNext, contentDescription = "Siguiente", tint = Color.White, modifier = Modifier.size(36.dp))
+            Icon(Icons.Default.SkipNext, contentDescription = "Siguiente", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(36.dp))
         }
 
         IconButton(onClick = { viewModel.toggleRepeatMode() }) {
             Icon(
                 imageVector = Icons.Default.Repeat,
                 contentDescription = "Repetir",
-                tint = if (isRepeatEnabled) Color.Cyan else Color.White,
+                tint = if (isRepeatEnabled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -299,8 +307,17 @@ fun ProgressSlider(currentPosition: Long, duration: Long, exoPlayer: ExoPlayer?)
                 .padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(formatDuration(currentPosition), color = Color.White, fontSize = 12.sp)
-            Text(formatDuration(duration), color = Color.White, fontSize = 12.sp)
+            Text(
+                text = formatDuration(currentPosition),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            Text(
+                text = formatDuration(duration),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
         }
     }
 }
@@ -316,10 +333,10 @@ fun SongDetails(song: Song) {
                 .horizontalScroll(rememberScrollState())
         ) {
             Text(
-                song.title,
-                color = Color.White,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
+                text = song.title,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
             )
         }
 
@@ -330,9 +347,10 @@ fun SongDetails(song: Song) {
                 .horizontalScroll(rememberScrollState())
         ) {
             Text(
-                song.artistName,
-                color = Color.Gray,
-                fontSize = 16.sp
+                text = song.artistName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
             )
         }
     }
@@ -368,7 +386,7 @@ fun CustomThinSlider(
                 Box(
                     modifier = Modifier
                         .size(12.dp) // Tamaño visible de la bolita
-                        .background(Color(0xFFFF5000), shape = CircleShape) // 🎨 COLOR DEL THUMB (círculo)
+                        .background(MaterialTheme.colorScheme.error, shape = CircleShape) // 🎨 COLOR DEL THUMB (círculo)
                 )
             }
         },
@@ -393,7 +411,7 @@ fun CustomThinSlider(
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
-                                    Color.White,                      // 🎨 Inicio del gradiente
+                                    MaterialTheme.colorScheme.onSurface,                      // 🎨 Inicio del gradiente
                                     Color(0xFFFF5000).copy(alpha = 0.3f) // 🎨 Fin translúcido
                                 )
                             )

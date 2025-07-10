@@ -31,6 +31,7 @@ import com.example.pulseplayer.NowPlaying
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.entity.Song
 import com.example.pulseplayer.ui.components.MiniPlayerBar
+import com.example.pulseplayer.views.SongCardItem
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import com.example.pulseplayer.views.viewmodel.SongViewModel
 
@@ -49,21 +50,11 @@ fun FavoriteScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.favorites_screen_title),
-                        color = Color.White,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimary,
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
             )
         },
         bottomBar = {
@@ -72,13 +63,13 @@ fun FavoriteScreen(
                 modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
             )
         },
-        containerColor = Color.Black
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         LazyColumn(
             contentPadding = padding,
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (favorites.isEmpty()) {
                 item {
@@ -88,8 +79,8 @@ fun FavoriteScreen(
                     ) {
                         Text(
                             text = stringResource(R.string.favorites_empty_message),
-                            color = Color.LightGray,
-                            fontSize = 16.sp
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -110,54 +101,6 @@ fun FavoriteScreen(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun SongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit) {
-    val borderColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0xFF9C27B0) else Color.Transparent,
-        label = "borderColor"
-    )
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-            .border(2.dp, borderColor, shape = RoundedCornerShape(16.dp))
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E)),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val painter = rememberAsyncImagePainter(
-                model = song.coverImage?.ifEmpty { null },
-                fallback = painterResource(id = com.example.pulseplayer.R.drawable.ic_music_placeholder)
-            )
-
-            Image(
-                painter = painter,
-                contentDescription = "Cover",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(song.title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text(song.artistName, color = Color.LightGray, fontSize = 14.sp)
-            }
-
-            Text(song.formattedDuration, color = Color.White, fontSize = 14.sp)
         }
     }
 }
