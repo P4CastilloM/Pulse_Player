@@ -36,9 +36,9 @@ class PlaylistViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun deletePlaylist(playlist: Playlist) {
+    fun deletePlaylist(playlistId: Long) {
         viewModelScope.launch {
-            dao.delete(playlist)
+            dao.deletePlaylistbyId(playlistId)
         }
     }
 

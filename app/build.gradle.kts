@@ -84,7 +84,7 @@ dependencies {
     implementation ("androidx.media3:media3-exoplayer:$exoPlayer")
     implementation ("androidx.media3:media3-ui:$exoPlayer")
     implementation ("androidx.media3:media3-session:$exoPlayer")
-    // Coil para carátulas (opcional)
+    // Coil para carÃ¡tulas (opcional)
     implementation ("io.coil-kt:coil-compose:2.5.0")
 
     //Reoordenable

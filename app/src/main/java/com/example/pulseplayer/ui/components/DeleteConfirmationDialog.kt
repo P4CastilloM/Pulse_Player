@@ -5,27 +5,26 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-
 @Composable
 fun DeleteConfirmationDialog(
-    title: String = "Confirmar eliminación",
-    message: String = "¿Estás seguro de que deseas eliminar esto?",
+    title: String,
+    message: String,
     confirmText: String = "Eliminar",
     dismissText: String = "Cancelar",
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
+    onDismiss:() -> Unit
+){
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismiss,
         title = {
-            Text(text = title, color = Color.White)
+            Text(text = "Eliminar $title", color = Color.White)
         },
         text = {
-            Text(text = message, color = Color.LightGray)
+            Text(text = "¿Estas seguro que quieres borrar $message?")
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(text = confirmText, color = Color.Red)
+                Text(confirmText,color = Color.Red)
             }
         },
         dismissButton = {

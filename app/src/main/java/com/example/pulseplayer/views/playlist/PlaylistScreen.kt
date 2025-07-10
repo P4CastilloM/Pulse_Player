@@ -1,7 +1,9 @@
 package com.example.pulseplayer.views.playlist
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -9,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +40,9 @@ fun PlaylistScreen(navController: NavController) {
     val playlists by viewModel.playlists.collectAsState()
     val landscape = isLandscape()
 
+    // Estado para guardar la playlist seleccionada para eliminación
+    var selectedPlaylistIdForDeletion by remember { mutableStateOf<Long?>(null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -47,7 +53,18 @@ fun PlaylistScreen(navController: NavController) {
                         color = Color.White
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black),
+                // Mostrar icono de eliminación en la TopAppBar si una playlist está seleccionada
+                actions = {
+                    selectedPlaylistIdForDeletion?.let {
+                        IconButton(onClick = {
+                            viewModel.deletePlaylist(it)
+                            selectedPlaylistIdForDeletion = null // Deseleccionar después de eliminar
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Eliminar playlist", tint = Color.Red)
+                        }
+                    }
+                }
             )
         },
         bottomBar = {
@@ -57,25 +74,27 @@ fun PlaylistScreen(navController: NavController) {
             )
         },
         floatingActionButton = {
-            if (landscape) {
-                FloatingActionButton(
-                    onClick = { navController.navigate(PlaylistCreateScreen) },
-                    containerColor = Color(0xFF9C27B0),
-                    contentColor = Color.White,
-                    modifier = Modifier.navigationBarsPadding(),
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Crear lista")
-                }
-            } else {
-                FloatingActionButton(
-                    onClick = { navController.navigate(PlaylistCreateScreen) },
-                    containerColor = Color(0xFF9C27B0),
-                    contentColor = Color.White,
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Crear lista")
+            // Solo mostrar el FAB si no hay ninguna playlist seleccionada para eliminar
+            if (selectedPlaylistIdForDeletion == null) {
+                if (landscape) {
+                    FloatingActionButton(
+                        onClick = { navController.navigate(PlaylistCreateScreen) },
+                        containerColor = Color(0xFF9C27B0),
+                        contentColor = Color.White,
+                        modifier = Modifier.navigationBarsPadding(),
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Crear lista")
+                    }
+                } else {
+                    FloatingActionButton(
+                        onClick = { navController.navigate(PlaylistCreateScreen) },
+                        containerColor = Color(0xFF9C27B0),
+                        contentColor = Color.White,
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Crear lista")
+                    }
                 }
             }
-
         },
         containerColor = Color.Black
     ) { padding ->
@@ -83,7 +102,7 @@ fun PlaylistScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp) // Aplicar padding horizontal aquí
         ) {
             if (playlists.isEmpty()) {
                 Box(
@@ -99,12 +118,24 @@ fun PlaylistScreen(navController: NavController) {
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(vertical = 16.dp), // Aplicar padding vertical aquí
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(playlists) { playlist ->
-                        PlaylistCard(playlist,navController)
+                        PlaylistCard(
+                            playlist = playlist,
+                            navController = navController,
+                            isSelected = playlist.id.toLong() == selectedPlaylistIdForDeletion,
+                            onLongClick = { selectedPlaylistIdForDeletion = playlist.id.toLong() },
+                            onClick = {
+                                if (selectedPlaylistIdForDeletion == null) {
+                                    navController.navigate(PlaylistDetailScreen(playlistId = playlist.id))
+                                } else {
+                                    selectedPlaylistIdForDeletion = null // Deseleccionar si ya está en modo selección
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -112,8 +143,15 @@ fun PlaylistScreen(navController: NavController) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PlaylistCard(playlist: Playlist, navController: NavController) {
+fun PlaylistCard(
+    playlist: Playlist,
+    navController: NavController,
+    isSelected: Boolean,
+    onLongClick: () -> Unit,
+    onClick: () -> Unit
+) {
     val colors = listOf(
         listOf(Color(0xFFFF416C), Color(0xFFFF4B2B)),
         listOf(Color(0xFF2193b0), Color(0xFF6dd5ed)),
@@ -131,8 +169,15 @@ fun PlaylistCard(playlist: Playlist, navController: NavController) {
             .background(
                 brush = Brush.horizontalGradient(gradient)
             )
-            .clickable { navController.navigate(PlaylistDetailScreen(playlistId = playlist.id)) }
-            .padding(16.dp),
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
+            .padding(16.dp)
+            .then(
+                if (isSelected) Modifier.background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                else Modifier
+            ),
         contentAlignment = Alignment.CenterStart
     ) {
         Text(
