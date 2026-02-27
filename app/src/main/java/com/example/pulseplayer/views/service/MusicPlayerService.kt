@@ -1,6 +1,10 @@
 package com.example.pulseplayer.views.service
 
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -8,9 +12,6 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
-import android.widget.RemoteViews
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.media.app.NotificationCompat.MediaStyle
@@ -19,50 +20,45 @@ import androidx.media3.common.Player
 import com.example.pulseplayer.MainActivity
 import com.example.pulseplayer.R
 import com.example.pulseplayer.views.player.ExoPlayerManager
-import java.io.File
 
 class MusicPlayerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d("MusicPlayerService", "✅ onCreate llamado")
-        // ✅ accede al player correctamente
         ExoPlayerManager.getPlayer()?.addListener(object : Player.Listener {
-
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                showCustomNotification()
+                showPlayerNotification()
             }
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
-                showCustomNotification()
+                showPlayerNotification()
             }
         })
         createNotificationChannel()
-        showCustomNotification()
+        showPlayerNotification()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            "ACTION_PLAY" -> ExoPlayerManager.resume()
-            "ACTION_PAUSE" -> ExoPlayerManager.pause()
-            "ACTION_NEXT" -> ExoPlayerManager.playNext()
-            "ACTION_PREV" -> ExoPlayerManager.playPrevious()
-            "ACTION_STOP" -> {
+            ACTION_PLAY -> ExoPlayerManager.resume()
+            ACTION_PAUSE -> ExoPlayerManager.pause()
+            ACTION_NEXT -> ExoPlayerManager.playNext()
+            ACTION_PREV -> ExoPlayerManager.playPrevious()
+            ACTION_STOP -> {
                 ExoPlayerManager.pause()
-                stopForeground(true)
+                stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 return START_NOT_STICKY
             }
         }
 
-        showCustomNotification()
+        showPlayerNotification()
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("MusicPlayerService", "🛑 Servicio detenido")
-        stopForeground(true)
+        stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -70,11 +66,12 @@ class MusicPlayerService : Service() {
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                "pulseplayer_channel",
+                CHANNEL_ID,
                 "PulsePlayer",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Control de reproducción de PulsePlayer"
+                description = "Controles de reproducción"
+                setShowBadge(false)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -82,88 +79,75 @@ class MusicPlayerService : Service() {
         }
     }
 
-    private fun showCustomNotification() {
-        val player = ExoPlayerManager.getPlayer()
+    private fun showPlayerNotification() {
         val song = ExoPlayerManager.getCurrentSong() ?: return
-        val isPlaying = player?.isPlaying == true
+        val isPlaying = ExoPlayerManager.getPlayer()?.isPlaying == true
 
-        // Intents para los botones
-        val playPauseIntent = Intent(this, MusicPlayerService::class.java).apply {
-            action = if (isPlaying) "ACTION_PAUSE" else "ACTION_PLAY"
-        }
-        val prevIntent = Intent(this, MusicPlayerService::class.java).apply {
-            action = "ACTION_PREV"
-        }
-        val nextIntent = Intent(this, MusicPlayerService::class.java).apply {
-            action = "ACTION_NEXT"
-        }
-        val stopIntent = Intent(this, MusicPlayerService::class.java).apply {
-            action = "ACTION_STOP"
-        }
+        val openAppIntent = PendingIntent.getActivity(
+            this,
+            20,
+            Intent(this, MainActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_SINGLE_TOP },
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
-        // PendingIntents
-        val playPausePendingIntent = PendingIntent.getService(this, 0, playPauseIntent, PendingIntent.FLAG_IMMUTABLE)
-        val prevPendingIntent = PendingIntent.getService(this, 1, prevIntent, PendingIntent.FLAG_IMMUTABLE)
-        val nextPendingIntent = PendingIntent.getService(this, 2, nextIntent, PendingIntent.FLAG_IMMUTABLE)
-        val stopPendingIntent = PendingIntent.getService(this, 3, stopIntent, PendingIntent.FLAG_IMMUTABLE)
+        val prevIntent = actionIntent(ACTION_PREV, 1)
+        val playPauseIntent = actionIntent(if (isPlaying) ACTION_PAUSE else ACTION_PLAY, 2)
+        val nextIntent = actionIntent(ACTION_NEXT, 3)
+        val stopIntent = actionIntent(ACTION_STOP, 4)
 
-        // RemoteViews personalizados
-        val remoteViews = RemoteViews(packageName, R.layout.notification_music_player).apply {
-            setTextViewText(R.id.text_title, song.title.ifEmpty { "Título desconocido" })
-            setTextViewText(R.id.text_artist, song.artistName.ifEmpty { "Artista desconocido" })
+        val artwork = getBitmapFromUri(song.coverImage)
 
-            // Cargar portada desde URI
-            val bitmap = getBitmapFromUri(song.coverImage)
-            if (bitmap != null) {
-                setImageViewBitmap(R.id.image_cover, bitmap)
-            } else {
-                setImageViewResource(R.id.image_cover, R.drawable.ic_music_placeholder)
-            }
-
-            // Botón play/pause
-            setImageViewResource(
-                R.id.btn_play_pause,
-                if (isPlaying) R.drawable.pause2_icon else R.drawable.play2_icon
-            )
-            setOnClickPendingIntent(R.id.btn_play_pause, playPausePendingIntent)
-
-            // Botones anteriores/siguiente/cerrar
-            setImageViewResource(R.id.btn_prev, R.drawable.back2_icon)
-            setImageViewResource(R.id.btn_next, R.drawable.skip2_icon)
-            setImageViewResource(R.id.btn_close, R.drawable.stop_icon)
-
-            setOnClickPendingIntent(R.id.btn_prev, prevPendingIntent)
-            setOnClickPendingIntent(R.id.btn_next, nextPendingIntent)
-            setOnClickPendingIntent(R.id.btn_close, stopPendingIntent)
-        }
-
-        // Construcción de la notificación
-        val notification = NotificationCompat.Builder(this, "pulseplayer_channel")
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.logo_ico)
             .setColor(ContextCompat.getColor(this, R.color.pulse_blue))
-            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-            .setCustomContentView(remoteViews)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
+            .setContentTitle(song.title.ifBlank { "Pulse Player" })
+            .setContentText(song.artistName.ifBlank { "Artista desconocido" })
+            .setLargeIcon(artwork)
+            .setContentIntent(openAppIntent)
+            .setDeleteIntent(stopIntent)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOnlyAlertOnce(true)
+            .setOngoing(isPlaying)
+            .addAction(R.drawable.back2_icon, getString(R.string.previous), prevIntent)
+            .addAction(
+                if (isPlaying) R.drawable.pause2_icon else R.drawable.play2_icon,
+                if (isPlaying) getString(R.string.pause) else getString(R.string.play),
+                playPauseIntent
+            )
+            .addAction(R.drawable.skip2_icon, getString(R.string.next), nextIntent)
+            .setStyle(MediaStyle().setShowActionsInCompactView(0, 1, 2))
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
 
-        startForeground(1, notification)
+        startForeground(NOTIFICATION_ID, notification)
+    }
+
+    private fun actionIntent(action: String, requestCode: Int): PendingIntent {
+        return PendingIntent.getService(
+            this,
+            requestCode,
+            Intent(this, MusicPlayerService::class.java).setAction(action),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
     }
 
     private fun getBitmapFromUri(uriString: String?): Bitmap? {
         if (uriString.isNullOrEmpty()) return null
         return try {
             val uri = Uri.parse(uriString)
-            contentResolver.openInputStream(uri)?.use {
-                BitmapFactory.decodeStream(it)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
+            contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+        } catch (_: Exception) {
             null
         }
     }
 
-
-
+    companion object {
+        private const val CHANNEL_ID = "pulseplayer_channel"
+        private const val NOTIFICATION_ID = 1
+        private const val ACTION_PLAY = "ACTION_PLAY"
+        private const val ACTION_PAUSE = "ACTION_PAUSE"
+        private const val ACTION_NEXT = "ACTION_NEXT"
+        private const val ACTION_PREV = "ACTION_PREV"
+        private const val ACTION_STOP = "ACTION_STOP"
+    }
 }
