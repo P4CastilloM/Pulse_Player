@@ -49,8 +49,9 @@ class MainActivity : ComponentActivity() {
                     }
                 },
                 onAppForegrounded = {
+                    stopService(Intent(this, MusicPlayerService::class.java))
                     val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                    manager.cancel(1) // Oculta la notificación al volver a la app
+                    manager.cancel(1)
                 }
             )
         )
