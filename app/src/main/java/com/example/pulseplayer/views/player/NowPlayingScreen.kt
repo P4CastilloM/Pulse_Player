@@ -345,23 +345,11 @@ private fun PlayerProgress(currentPosition: Long, duration: Long, onSeek: (Float
         onValueChange = onSeek,
         valueRange = 0f..duration.toFloat(),
         thumb = {
-            SliderDefaults.Thumb(
-                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                colors = SliderDefaults.colors(thumbColor = Color(0xFF6D4AFF)),
-                thumbSize = DpSize(10.dp, 10.dp)
-            )
-        },
-        track = { sliderState ->
-            SliderDefaults.Track(
-                sliderState = sliderState,
-                colors = SliderDefaults.colors(
-                    activeTrackColor = Color.White.copy(alpha = 0.22f),
-                    inactiveTrackColor = Color.White.copy(alpha = 0.22f)
-                ),
-                drawStopIndicator = null,
-                trackCornerSize = 100.dp,
-                thumbTrackGapSize = 0.dp,
-                trackInsideCornerSize = 100.dp
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF6D4AFF))
             )
         },
         colors = SliderDefaults.colors(
@@ -369,7 +357,7 @@ private fun PlayerProgress(currentPosition: Long, duration: Long, onSeek: (Float
             activeTrackColor = Color.White.copy(alpha = 0.22f),
             inactiveTrackColor = Color.White.copy(alpha = 0.22f)
         ),
-        modifier = Modifier.height(18.dp)
+        modifier = Modifier.height(14.dp)
     )
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(formatDuration(currentPosition), color = Color(0xFFA8B0C8), style = MaterialTheme.typography.labelMedium)
