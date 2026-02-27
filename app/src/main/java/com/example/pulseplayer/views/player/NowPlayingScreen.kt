@@ -1,5 +1,7 @@
 package com.example.pulseplayer.views.player
 
+import android.graphics.Bitmap
+import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,6 +38,7 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +52,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,6 +61,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -64,11 +69,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.core.graphics.drawable.toBitmap
 import coil.compose.rememberAsyncImagePainter
+import coil.imageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 @Composable
 fun NowPlayingScreen(
@@ -123,7 +134,7 @@ fun NowPlayingScreen(
         return
     }
 
-    val glowColor = remember(song.coverImage) { glowColorFromCover(song.coverImage) }
+    val glowColor by rememberDynamicGlowColor(song.coverImage)
 
     Scaffold(
         containerColor = Color(0xFF05060D),
@@ -292,14 +303,14 @@ private fun AlbumArtWithGlow(coverImage: String?, glowColor: Color, size: androi
         Box(
             modifier = Modifier
                 .size(size + 120.dp)
-                .blur(62.dp)
-                .background(glowColor.copy(alpha = 0.26f), CircleShape)
+                .blur(72.dp)
+                .background(glowColor.copy(alpha = 0.34f), CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(size + 64.dp)
-                .blur(34.dp)
-                .background(glowColor.copy(alpha = 0.34f), RoundedCornerShape(44.dp))
+                .blur(40.dp)
+                .background(glowColor.copy(alpha = 0.42f), RoundedCornerShape(44.dp))
         )
 
         Box(
@@ -327,6 +338,7 @@ private fun SongTexts(song: com.example.pulseplayer.data.entity.Song) {
     Text(song.album.orEmpty(), color = Color.White.copy(alpha = 0.45f), style = MaterialTheme.typography.bodyMedium)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayerProgress(currentPosition: Long, duration: Long, onSeek: (Float) -> Unit) {
     Slider(
@@ -335,9 +347,10 @@ private fun PlayerProgress(currentPosition: Long, duration: Long, onSeek: (Float
         valueRange = 0f..duration.toFloat(),
         colors = SliderDefaults.colors(
             thumbColor = Color(0xFF6D4AFF),
-            activeTrackColor = Color.White.copy(alpha = 0.24f),
-            inactiveTrackColor = Color.White.copy(alpha = 0.24f)
-        )
+            activeTrackColor = Color.White.copy(alpha = 0.22f),
+            inactiveTrackColor = Color.White.copy(alpha = 0.22f)
+        ),
+        modifier = Modifier.height(14.dp)
     )
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(formatDuration(currentPosition), color = Color(0xFFA8B0C8), style = MaterialTheme.typography.labelMedium)
@@ -396,17 +409,74 @@ private fun MainTransportButtons(
     }
 }
 
-private fun glowColorFromCover(cover: String?): Color {
-    if (cover.isNullOrBlank()) return Color(0xFF6D4AFF)
-    val palette = listOf(
-        Color(0xFF6D4AFF),
-        Color(0xFF4F46E5),
-        Color(0xFF7C3AED),
-        Color(0xFF2563EB),
-        Color(0xFF9333EA)
-    )
-    val index = kotlin.math.abs(cover.hashCode()) % palette.size
-    return palette[index]
+@Composable
+private fun rememberDynamicGlowColor(coverImage: String?): androidx.compose.runtime.State<Color> {
+    val context = LocalContext.current
+    return produceState(initialValue = Color(0xFF6D4AFF), coverImage) {
+        value = extractDominantGlowColor(context.imageLoader, context, coverImage) ?: Color(0xFF6D4AFF)
+    }
+}
+
+private suspend fun extractDominantGlowColor(
+    imageLoader: coil.ImageLoader,
+    context: android.content.Context,
+    coverImage: String?
+): Color? {
+    if (coverImage.isNullOrBlank()) return null
+    return withContext(Dispatchers.IO) {
+        runCatching {
+            val request = ImageRequest.Builder(context)
+                .data(coverImage)
+                .size(64, 64)
+                .allowHardware(false)
+                .build()
+            val result = imageLoader.execute(request) as? SuccessResult ?: return@withContext null
+            val bitmap = result.drawable.toBitmap(64, 64, Bitmap.Config.ARGB_8888)
+            dominantColorFromBitmap(bitmap)
+        }.getOrNull()
+    }
+}
+
+private fun dominantColorFromBitmap(bitmap: Bitmap): Color {
+    var r = 0f
+    var g = 0f
+    var b = 0f
+    var weightSum = 0f
+
+    val widthStep = (bitmap.width / 20).coerceAtLeast(1)
+    val heightStep = (bitmap.height / 20).coerceAtLeast(1)
+
+    for (x in 0 until bitmap.width step widthStep) {
+        for (y in 0 until bitmap.height step heightStep) {
+            val pixel = bitmap.getPixel(x, y)
+            val red = AndroidColor.red(pixel)
+            val green = AndroidColor.green(pixel)
+            val blue = AndroidColor.blue(pixel)
+
+            val maxChannel = maxOf(red, green, blue).toFloat()
+            val minChannel = minOf(red, green, blue).toFloat()
+            val saturation = if (maxChannel == 0f) 0f else (maxChannel - minChannel) / maxChannel
+            val weight = 0.35f + saturation
+
+            r += red * weight
+            g += green * weight
+            b += blue * weight
+            weightSum += weight
+        }
+    }
+
+    if (weightSum == 0f) return Color(0xFF6D4AFF)
+
+    val rawColor = Color((r / weightSum) / 255f, (g / weightSum) / 255f, (b / weightSum) / 255f, 1f)
+    val boosted = rawColor.copy(alpha = 1f)
+    return if (boosted.luminance() < 0.15f) {
+        boosted.copy(
+            red = (boosted.red + 0.20f).coerceAtMost(1f),
+            blue = (boosted.blue + 0.20f).coerceAtMost(1f)
+        )
+    } else {
+        boosted
+    }
 }
 
 @Composable
