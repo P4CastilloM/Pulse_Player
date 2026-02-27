@@ -1,10 +1,8 @@
 package com.example.pulseplayer.views.viewmodel
 
 import android.app.Application
-import android.content.Intent
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -94,12 +92,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
      * @param song La canción a reproducir.
      */
     fun playSong(song: Song) {
-        ExoPlayerManager.play(song) // primero comienza la reproducción
+        ExoPlayerManager.play(song)
         _currentSong.value = song
-
-       //// Luego inicia el servicio
-       //val intent = Intent(context, MusicPlayerService::class.java)
-       //ContextCompat.startForegroundService(context, intent)
+        startMusicService()
     }
 
 
@@ -113,7 +108,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun playPlaylist(songs: List<Song>, startIndex: Int) {
         ExoPlayerManager.playPlaylist(songs, startIndex)
         _currentSong.value = songs[startIndex]
-       // startMusicService() // Esto ya está bien, solo asegúrate que se llama después de play
+        startMusicService()
     }
 
 
@@ -124,6 +119,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
      */
     fun playNext() {
         ExoPlayerManager.playNext()
+        startMusicService()
     }
 
     /**
@@ -132,19 +128,26 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
      */
     fun playPrevious() {
         ExoPlayerManager.playPrevious()
+        startMusicService()
     }
 
     /**
      * Pausa la reproducción actual.
      * Delega la acción a ExoPlayerManager.
      */
-    fun pause() = ExoPlayerManager.pause()
+    fun pause() {
+        ExoPlayerManager.pause()
+        startMusicService(MusicPlayerService.ACTION_SYNC)
+    }
 
     /**
      * Reanuda la reproducción actual.
      * Delega la acción a ExoPlayerManager.
      */
-    fun resume() = ExoPlayerManager.resume()
+    fun resume() {
+        ExoPlayerManager.resume()
+        startMusicService()
+    }
 
     /**
      * Verifica si el reproductor está actualmente reproduciendo.
@@ -234,13 +237,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    private fun startMusicService() {
-        val intent = Intent(context, MusicPlayerService::class.java)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            context.startForegroundService(intent)
-        } else {
-            context.startService(intent)
-        }
+    private fun startMusicService(action: String = MusicPlayerService.ACTION_SYNC) {
+        MusicPlayerService.start(context, action)
     }
 
 }

@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.app.NotificationManager
 import android.content.res.Configuration
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -49,9 +48,8 @@ class MainActivity : ComponentActivity() {
                     }
                 },
                 onAppForegrounded = {
-                    stopService(Intent(this, MusicPlayerService::class.java))
-                    val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                    manager.cancel(1)
+                    // Mantener el servicio evita cortes al volver a primer plano.
+                    // La notificación se actualiza automáticamente con el estado del player.
                 }
             )
         )
