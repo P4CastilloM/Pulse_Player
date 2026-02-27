@@ -23,19 +23,25 @@ import com.example.pulseplayer.views.player.ExoPlayerManager
 
 class MusicPlayerService : Service() {
 
+    private val playerListener = object : Player.Listener {
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            showPlayerNotification()
+        }
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            showPlayerNotification()
+        }
+
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            showPlayerNotification()
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
-        ExoPlayerManager.getPlayer()?.addListener(object : Player.Listener {
-            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                showPlayerNotification()
-            }
-
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                showPlayerNotification()
-            }
-        })
+        ExoPlayerManager.init(applicationContext)
+        ExoPlayerManager.getPlayer()?.addListener(playerListener)
         createNotificationChannel()
-        showPlayerNotification()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -50,6 +56,7 @@ class MusicPlayerService : Service() {
                 stopSelf()
                 return START_NOT_STICKY
             }
+            ACTION_SYNC, null -> Unit
         }
 
         showPlayerNotification()
@@ -57,8 +64,9 @@ class MusicPlayerService : Service() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        ExoPlayerManager.getPlayer()?.removeListener(playerListener)
         stopForeground(STOP_FOREGROUND_REMOVE)
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -80,8 +88,14 @@ class MusicPlayerService : Service() {
     }
 
     private fun showPlayerNotification() {
-        val song = ExoPlayerManager.getCurrentSong() ?: return
+        val song = ExoPlayerManager.getCurrentSong()
         val isPlaying = ExoPlayerManager.getPlayer()?.isPlaying == true
+
+        if (song == null) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+            return
+        }
 
         val openAppIntent = PendingIntent.getActivity(
             this,
@@ -144,10 +158,16 @@ class MusicPlayerService : Service() {
     companion object {
         private const val CHANNEL_ID = "pulseplayer_channel"
         private const val NOTIFICATION_ID = 1
-        private const val ACTION_PLAY = "ACTION_PLAY"
-        private const val ACTION_PAUSE = "ACTION_PAUSE"
-        private const val ACTION_NEXT = "ACTION_NEXT"
-        private const val ACTION_PREV = "ACTION_PREV"
-        private const val ACTION_STOP = "ACTION_STOP"
+        const val ACTION_PLAY = "ACTION_PLAY"
+        const val ACTION_PAUSE = "ACTION_PAUSE"
+        const val ACTION_NEXT = "ACTION_NEXT"
+        const val ACTION_PREV = "ACTION_PREV"
+        const val ACTION_STOP = "ACTION_STOP"
+        const val ACTION_SYNC = "ACTION_SYNC"
+
+        fun start(context: Context, action: String = ACTION_SYNC) {
+            val intent = Intent(context, MusicPlayerService::class.java).setAction(action)
+            ContextCompat.startForegroundService(context, intent)
+        }
     }
 }

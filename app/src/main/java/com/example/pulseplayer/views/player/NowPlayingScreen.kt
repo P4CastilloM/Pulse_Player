@@ -63,6 +63,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -303,18 +304,36 @@ private fun LandscapePlayerContent(
 
 @Composable
 private fun AlbumArtWithGlow(coverImage: String?, glowColor: Color, size: androidx.compose.ui.unit.Dp) {
+    val basePurple = Color(0xFF6D4AFF)
+    val stableGlow = lerp(basePurple, glowColor, 0.42f)
+
     Box(contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
-                .size(size + 120.dp)
-                .blur(72.dp)
-                .background(glowColor.copy(alpha = 0.34f), CircleShape)
+                .size(size + 170.dp)
+                .blur(78.dp)
+                .background(stableGlow.copy(alpha = 0.18f), CircleShape)
         )
         Box(
             modifier = Modifier
-                .size(size + 64.dp)
-                .blur(40.dp)
-                .background(glowColor.copy(alpha = 0.42f), RoundedCornerShape(44.dp))
+                .size(size + 108.dp)
+                .blur(48.dp)
+                .background(stableGlow.copy(alpha = 0.30f), CircleShape)
+        )
+        Box(
+            modifier = Modifier
+                .size(size + 56.dp)
+                .blur(24.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            stableGlow.copy(alpha = 0.52f),
+                            stableGlow.copy(alpha = 0.20f),
+                            Color.Transparent
+                        )
+                    ),
+                    CircleShape
+                )
         )
 
         Box(
@@ -331,7 +350,7 @@ private fun AlbumArtWithGlow(coverImage: String?, glowColor: Color, size: androi
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-            Box(modifier = Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.18f)))
+            Box(modifier = Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.10f)))
         }
     }
 }
@@ -526,15 +545,17 @@ private fun dominantColorFromBitmap(bitmap: Bitmap): Color {
     if (weightSum == 0f) return Color(0xFF6D4AFF)
 
     val rawColor = Color((r / weightSum) / 255f, (g / weightSum) / 255f, (b / weightSum) / 255f, 1f)
-    val boosted = rawColor.copy(alpha = 1f)
-    return if (boosted.luminance() < 0.15f) {
-        boosted.copy(
-            red = (boosted.red + 0.20f).coerceAtMost(1f),
-            blue = (boosted.blue + 0.20f).coerceAtMost(1f)
+    val boosted = if (rawColor.luminance() < 0.16f) {
+        rawColor.copy(
+            red = (rawColor.red + 0.18f).coerceAtMost(1f),
+            blue = (rawColor.blue + 0.24f).coerceAtMost(1f)
         )
     } else {
-        boosted
+        rawColor
     }
+
+    val purpleAnchor = Color(0xFF6D4AFF)
+    return lerp(purpleAnchor, boosted, 0.45f)
 }
 
 @Composable
