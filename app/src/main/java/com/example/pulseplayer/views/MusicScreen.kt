@@ -1,87 +1,97 @@
 package com.example.pulseplayer.views
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import com.example.pulseplayer.Music
 import com.example.pulseplayer.NowPlaying
 import com.example.pulseplayer.R
-import com.example.pulseplayer.data.PulsePlayerDatabase
-import com.example.pulseplayer.data.entity.Song
 import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import com.example.pulseplayer.views.viewmodel.SongViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.first
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicScreen(navController: NavController) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val songViewModel: SongViewModel = viewModel()
     val songs by songViewModel.allSongs.collectAsState()
     val playerViewModel: PlayerViewModel = viewModel()
-    var selectedSongId by remember { mutableStateOf<Int?>(null) }
-
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.title_music),
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF090B1A))
+                    .statusBarsPadding()
+                    .height(56.dp)
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text("Música", color = Color.White, style = MaterialTheme.typography.titleLarge)
+            }
         },
         bottomBar = {
             MiniPlayerBar(
                 navController = navController,
-                modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
             )
         },
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color(0xFF060911)
     ) { padding ->
         LazyColumn(
             contentPadding = padding,
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(WindowInsets.systemBars.asPaddingValues())
+                .background(Color(0xFF060911))
+                .padding(horizontal = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(songs) { song ->
                 SongCardItem(
                     song = song,
                     isSelected = playerViewModel.currentSong.value?.idSong == song.idSong,
                     onClick = {
-                        val allSongIds = songs.map { it.idSong } //navegar a la pantalla de reproducción
+                        val allSongIds = songs.map { it.idSong }
                         val startIndex = songs.indexOfFirst { it.idSong == song.idSong }
                         playerViewModel.playPlaylist(songs, startIndex)
                         navController.navigate(NowPlaying(song.idSong, allSongIds)) {
@@ -96,60 +106,45 @@ fun MusicScreen(navController: NavController) {
 }
 
 @Composable
-fun SongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit) {
+fun SongCardItem(song: com.example.pulseplayer.data.entity.Song, isSelected: Boolean, onClick: () -> Unit) {
     val borderColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0xFF9C27B0) else Color.Transparent,
+        targetValue = if (isSelected) Color(0xFF8B5CF6) else Color.Transparent,
         label = "borderColor"
     )
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-            .border(2.dp, borderColor, shape = RoundedCornerShape(16.dp))
+            .border(1.5.dp, borderColor, shape = RoundedCornerShape(16.dp))
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(Brush.horizontalGradient(listOf(Color(0xFF131D37), Color(0xFF0B1328))))
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val painter = rememberAsyncImagePainter(
-                model = song.coverImage?.ifEmpty { R.drawable.ic_music_placeholder }
-            )
-
-            Image(
-                painter = painter,
+            AsyncImage(
+                model = song.coverImage?.ifEmpty { R.drawable.ic_music_placeholder },
                 contentDescription = "Cover",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
+                    .size(54.dp)
+                    .clip(RoundedCornerShape(12.dp))
             )
 
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = song.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = song.artistName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(text = song.title, style = MaterialTheme.typography.titleSmall, color = Color.White)
+                Text(text = song.artistName, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.6f))
             }
 
-            Text(
-                text = song.formattedDuration,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            Icon(Icons.Outlined.MusicNote, contentDescription = null, tint = Color(0xFFA78BFA), modifier = Modifier.padding(end = 8.dp))
+            Text(text = song.formattedDuration, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.75f))
         }
     }
 }

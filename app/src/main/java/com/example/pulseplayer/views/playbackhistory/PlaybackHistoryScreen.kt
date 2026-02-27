@@ -70,14 +70,14 @@ fun PlaybackHistoryScreen(navController: NavController, playerViewModel: PlayerV
                 title = { Text(
                     "Historial",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = Color.White,
                     ) },
                 actions = {
                     IconButton(onClick = { showConfirmDialog = true }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Eliminar historial", tint = MaterialTheme.colorScheme.onPrimary)
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar historial", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF090B1A)),
             )
         },
         bottomBar = {
@@ -86,7 +86,7 @@ fun PlaybackHistoryScreen(navController: NavController, playerViewModel: PlayerV
                 modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
             )
         },
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color(0xFF060911),
     ) { padding ->
         LazyColumn(
             modifier = Modifier

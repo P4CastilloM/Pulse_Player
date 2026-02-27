@@ -1,24 +1,54 @@
 package com.example.pulseplayer.views.player
 
-import android.widget.Space
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,406 +56,308 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
-import com.example.pulseplayer.data.entity.Song
-import com.example.pulseplayer.isLandscape
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NowPlayingScreen(navController: NavController, songId: Int, songIds: List<Int>, viewModel: PlayerViewModel = viewModel()) {
+fun NowPlayingScreen(
+    navController: NavController,
+    songId: Int,
+    songIds: List<Int>,
+    viewModel: PlayerViewModel = viewModel()
+) {
     val context = LocalContext.current
-    val currentSong by viewModel.currentSong // Observa la canción actual del ViewModel
+    val currentSong by viewModel.currentSong
+    val isPlaying by viewModel.isPlaying
+    val isFavorite by viewModel.isCurrentFavorite
+    val exoPlayer = viewModel.getPlayer()
 
-    val exoPlayer = viewModel.getPlayer() // Obtiene la instancia del reproductor de ExoPlayerManager
     var currentPosition by remember { mutableStateOf(0L) }
-    var duration by remember { mutableStateOf(0L) }
-
-    // Estado para habilitar/deshabilitar los botones de navegación
+    var duration by remember { mutableStateOf(1L) }
     var canPlayNext by remember { mutableStateOf(false) }
     var canPlayPrevious by remember { mutableStateOf(false) }
+    var showEqDialog by remember { mutableStateOf(false) }
 
-    // Estados visuales (solo estético)
-    var isShuffleEnabled by remember { mutableStateOf(false) }
-    var isRepeatEnabled by remember { mutableStateOf(false) }
-    val isFavorite by viewModel.isCurrentFavorite
+    val equalizer = remember { PlayerEqualizer { viewModel.getPlayer() } }
+    DisposableEffect(Unit) { onDispose { equalizer.release() } }
 
-    //orientacion de la pantalla
-    val landscape = isLandscape()
+    LaunchedEffect(currentSong?.idSong) { viewModel.checkIfCurrentSongIsFavorite() }
 
-    LaunchedEffect(currentSong?.idSong) {
-        viewModel.checkIfCurrentSongIsFavorite()
+    LaunchedEffect(songId, songIds) {
+        if (viewModel.currentSong.value?.idSong != songId) {
+            val dao = PulsePlayerDatabase.getDatabase(context).songDao()
+            val songList = songIds.mapNotNull { dao.getById(it) }
+            val startIndex = songList.indexOfFirst { it.idSong == songId }
+            if (startIndex != -1) viewModel.playPlaylist(songList, startIndex)
+        }
     }
 
-    // Actualiza el progreso de la reproducción y la duración
     LaunchedEffect(exoPlayer) {
-        // Ver que el exoPlayer no sea nulo y esté listo para obtener la posición/duración
         exoPlayer?.let { player ->
             while (true) {
                 currentPosition = player.currentPosition
-                // Asegura que la duración no sea cero para evitar divisiones por cero en el Slider
-                duration = player.duration.takeIf { d -> d > 0 } ?: 1L
-
-                // Actualiza el estado de los botones
+                duration = player.duration.takeIf { it > 0 } ?: 1L
                 canPlayNext = player.hasNextMediaItem()
                 canPlayPrevious = player.hasPreviousMediaItem()
-
-                delay(500) // Actualiza cada 500ms
+                delay(300)
             }
         }
     }
 
-    // Carga la canción o playlist cuando la pantalla se lanza o los IDs cambian
-    LaunchedEffect(songId, songIds) {
-        // Solo carga la playlist si la canción actual del ViewModel no coincide con la solicitada,
-        // o si no hay ninguna canción reproduciéndose actualmente.
-        // Esto evita recargar innecesariamente la misma canción/playlist.
-        if (viewModel.currentSong.value?.idSong != songId) {
-            val dao = PulsePlayerDatabase.getDatabase(context).songDao()
-            // Mapea los IDs a objetos Song, filtrando cualquier resultado nulo
-            val songList = songIds.mapNotNull { dao.getById(it) }
-
-            val startIndex = songList.indexOfFirst { it.idSong == songId }
-
-            if (startIndex != -1) {
-                // Llama a playPlaylist del ViewModel, que a su vez usa el ExoPlayerManager
-                // para reemplazar completamente la cola de reproducción.
-                viewModel.playPlaylist(songList, startIndex)
-            }
-        }
-    }
-
-    // Muestra un indicador de carga si no hay ninguna canción cargada
-    if (currentSong == null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.onSurface)
+    val song = currentSong
+    if (song == null) {
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF060911)), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = Color.White)
         }
         return
     }
 
-    val isPlaying by viewModel.isPlaying // Observa el estado de reproducción del ViewModel
-
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.playing_music),
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                ),
-                actions = {
-                    IconButton(onClick = {
-                        viewModel.toggleFavoriteStatus()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = "Favorito",
-                            tint = if (isFavorite)
-                                MaterialTheme.colorScheme.error
-                            else
-                                MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-
-                }
-            )
+        containerColor = Color(0xFF05060D),
+        bottomBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(bottom = 6.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(4.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.28f))
+                )
+            }
         }
     ) { padding ->
-        //si el modo landscape esta activado toma este diseño
-        if (landscape) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.verticalGradient(listOf(Color(0xFF0A0A14), Color(0xFF090B1A), Color(0xFF06070F))))
+                .padding(padding)
+                .padding(horizontal = 18.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(8.dp))
             Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceAround,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                //imagen a la izquierda
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f),
-                    shape = RoundedCornerShape(24.dp)
-                ) {
-                    val painter = rememberAsyncImagePainter(
-                        model = if (currentSong!!.coverImage?.isEmpty() == true)
-                            R.drawable.ic_music_placeholder
-                        else currentSong!!.coverImage
-                    )
-                    Image(
-                        painter = painter,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(24.dp))
-
-                //controles a la derecha
-                Column(
-                    modifier = Modifier.weight(2f),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    SongDetails(currentSong!!)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    ProgressSlider(currentPosition, duration, exoPlayer)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    PlaybackControls(isPlaying, canPlayPrevious, canPlayNext, viewModel)
-                }
+                GlassIconButton(icon = Icons.Default.KeyboardArrowLeft) { navController.popBackStack() }
+                Text(
+                    text = "REPRODUCIENDO AHORA",
+                    color = Color.White.copy(alpha = 0.5f),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                GlassIconButton(icon = Icons.Default.MoreVert) {}
             }
-        } else {
-            //sino ocupar el diseño vertical normal
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(modifier = Modifier.height(40.dp))
 
-                // Imagen contenida en Card
-                Card(
+            Spacer(Modifier.height(32.dp))
+            Box {
+                Box(
                     modifier = Modifier
-                        .size(300.dp),
-                    shape = RoundedCornerShape(24.dp)
+                        .size(250.dp)
+                        .clip(RoundedCornerShape(30.dp))
+                        .background(Brush.linearGradient(listOf(Color(0xFF5B21B6), Color(0xFF1E3A8A), Color(0xFF0F172A))))
+                        .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(30.dp)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    val painter = rememberAsyncImagePainter(
-                        model = if (currentSong!!.coverImage?.isEmpty() == true) R.drawable.ic_music_placeholder else currentSong!!.coverImage
-                    )
                     Image(
-                        painter = painter,
+                        painter = rememberAsyncImagePainter(
+                            model = if (song.coverImage?.isEmpty() == true) R.drawable.ic_music_placeholder else song.coverImage
+                        ),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
-                SongDetails(currentSong!!)
-                Spacer(modifier = Modifier.height(24.dp))
-                ProgressSlider(currentPosition, duration, exoPlayer)
-                Spacer(modifier = Modifier.height(24.dp))
-                PlaybackControls(isPlaying, canPlayPrevious, canPlayNext, viewModel)
-            }
-        }
-    }
-}
-
-//componente de controles de reproduccion
-@Composable
-fun PlaybackControls(isPlaying: Boolean, canPlayPrevious: Boolean, canPlayNext: Boolean, viewModel: PlayerViewModel) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val isShuffleEnabled by viewModel.isShuffleEnabled
-        val isRepeatEnabled by viewModel.isRepeatEnabled
-
-        IconButton(onClick = { viewModel.toggleShuffleMode() }) {
-            Icon(
-                imageVector = Icons.Default.Shuffle,
-                contentDescription = "Aleatorio",
-                tint = if (isShuffleEnabled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(28.dp),
-            )
-        }
-
-        IconButton(
-            onClick = { viewModel.playPrevious() },
-            enabled = canPlayPrevious
-        ) {
-            Icon(Icons.Default.SkipPrevious, contentDescription = "Anterior", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(36.dp))
-        }
-
-        IconButton(onClick = {
-            if (isPlaying) viewModel.pause() else viewModel.resume()
-        }) {
-            Icon(
-                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                contentDescription = "Play/Pause",
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(64.dp)
-            )
-        }
-
-        IconButton(
-            onClick = { viewModel.playNext() },
-            enabled = canPlayNext
-        ) {
-            Icon(Icons.Default.SkipNext, contentDescription = "Siguiente", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(36.dp))
-        }
-
-        IconButton(onClick = { viewModel.toggleRepeatMode() }) {
-            Icon(
-                imageVector = Icons.Default.Repeat,
-                contentDescription = "Repetir",
-                tint = if (isRepeatEnabled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(28.dp)
-            )
-        }
-    }
-}
-
-//componente de barra de progreso
-@Composable
-fun ProgressSlider(currentPosition: Long, duration: Long, exoPlayer: ExoPlayer?) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        CustomThinSlider(
-            value = currentPosition.toFloat(),
-            onValueChange = { exoPlayer?.seekTo(it.toLong()) },
-            valueRange = 0f..duration.toFloat()
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = formatDuration(currentPosition),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-
-            Text(
-                text = formatDuration(duration),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        }
-    }
-}
-
-//componente de detalles de la cancion
-@Composable
-fun SongDetails(song: Song) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(28.dp)
-                .horizontalScroll(rememberScrollState())
-        ) {
-            Text(
-                text = song.title,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 1,
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(20.dp)
-                .horizontalScroll(rememberScrollState())
-        ) {
-            Text(
-                text = song.artistName,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-            )
-        }
-    }
-}
-
-// Barra de Progreso Delgada
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CustomThinSlider(
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    valueRange: ClosedFloatingPointRange<Float>,
-    modifier: Modifier = Modifier
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-
-    Slider(
-        value = value,
-        onValueChange = onValueChange,
-        valueRange = valueRange,
-        interactionSource = interactionSource,
-        steps = 0,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(24.dp), // Altura total del slider (incluyendo thumb)
-
-        // 🎯 THUMB PERSONALIZADO (bolita)
-        thumb = {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.size(24.dp) // Espacio reservado para el thumb
-            ) {
                 Box(
                     modifier = Modifier
-                        .size(12.dp) // Tamaño visible de la bolita
-                        .background(MaterialTheme.colorScheme.error, shape = CircleShape) // 🎨 COLOR DEL THUMB (círculo)
+                        .matchParentSize()
+                        .clip(RoundedCornerShape(30.dp))
+                        .background(Color.Black.copy(alpha = 0.28f))
                 )
             }
-        },
 
-        // 🎯 TRACK PERSONALIZADO (línea)
-        track = { sliderState ->
-            val progressFraction = sliderState.value.coerceIn(0f..1f)
+            Spacer(Modifier.height(28.dp))
+            Text(song.title, color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(song.artistName, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.titleMedium)
+            Text(song.album.orEmpty(), color = Color.White.copy(alpha = 0.45f), style = MaterialTheme.typography.bodyMedium)
 
-            // Fondo (parte no reproducida)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp) // Grosor de la barra
-                    .clip(RoundedCornerShape(percent = 50))
-                    .background(Color(0xFF3A3A3A)) // 🎨 COLOR DE LA LÍNEA DE FONDO (inactiva)
+            Spacer(Modifier.height(28.dp))
+            Slider(
+                value = currentPosition.coerceAtMost(duration).toFloat(),
+                onValueChange = { exoPlayer?.seekTo(it.toLong()) },
+                valueRange = 0f..duration.toFloat(),
+                colors = SliderDefaults.colors(
+                    thumbColor = Color(0xFF6D4AFF),
+                    activeTrackColor = Color(0xFF6D4AFF),
+                    inactiveTrackColor = Color.White.copy(alpha = 0.25f)
+                )
+            )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(formatDuration(currentPosition), color = Color.White.copy(alpha = 0.7f))
+                Text(formatDuration(duration), color = Color.White.copy(alpha = 0.7f))
+            }
+
+            Spacer(Modifier.height(18.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Progreso (parte reproducida) con degradado
+                IconButton(onClick = { viewModel.toggleShuffleMode() }) {
+                    Icon(Icons.Default.Shuffle, null, tint = Color.White.copy(alpha = 0.75f))
+                }
+                IconButton(onClick = { viewModel.toggleRepeatMode() }) {
+                    Icon(Icons.Default.Repeat, null, tint = Color.White.copy(alpha = 0.75f))
+                }
+                IconButton(onClick = { viewModel.toggleFavoriteStatus() }) {
+                    Icon(
+                        if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        null,
+                        tint = if (isFavorite) Color(0xFFFB7185) else Color.White.copy(alpha = 0.75f)
+                    )
+                }
+                IconButton(onClick = { showEqDialog = true }) {
+                    Icon(Icons.Default.Equalizer, null, tint = Color.White.copy(alpha = 0.85f))
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { viewModel.playPrevious() }, enabled = canPlayPrevious) {
+                    Icon(Icons.Default.SkipPrevious, null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(34.dp))
+                }
+
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(progressFraction)
-                        .fillMaxHeight()
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.onSurface,                      // 🎨 Inicio del gradiente
-                                    Color(0xFFFF5000).copy(alpha = 0.3f) // 🎨 Fin translúcido
-                                )
-                            )
+                        .size(68.dp)
+                        .clip(CircleShape)
+                        .background(Brush.linearGradient(listOf(Color(0xFF7C3AED), Color(0xFF4F46E5)))),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(onClick = { if (isPlaying) viewModel.pause() else viewModel.resume() }) {
+                        Icon(
+                            if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            null,
+                            tint = Color.White,
+                            modifier = Modifier.size(36.dp)
                         )
-                )
+                    }
+                }
+
+                IconButton(onClick = { viewModel.playNext() }, enabled = canPlayNext) {
+                    Icon(Icons.Default.SkipNext, null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(34.dp))
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+    }
+
+    if (showEqDialog) {
+        EqualizerDialog(equalizer = equalizer, onDismiss = { showEqDialog = false })
+    }
+}
+
+@Composable
+private fun GlassIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.06f))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(12.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        IconButton(onClick = onClick) {
+            Icon(icon, contentDescription = null, tint = Color.White.copy(alpha = 0.65f))
+        }
+    }
+}
+
+@Composable
+private fun EqualizerDialog(equalizer: PlayerEqualizer, onDismiss: () -> Unit) {
+    var refreshToken by remember { mutableStateOf(0) }
+    val isReady = remember(refreshToken) { equalizer.ensureReady() }
+    val presets = remember(refreshToken) { equalizer.presets() }
+    var selectedPreset by remember(refreshToken) { mutableStateOf(equalizer.currentPreset()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Ecualizador") },
+        text = {
+            if (!isReady) {
+                Text("El ecualizador se habilita cuando el audio está activo. Inicia la reproducción e inténtalo de nuevo.")
+            } else {
+                Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+                    Text("Presets", style = MaterialTheme.typography.titleSmall)
+                    Spacer(Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+                        presets.forEach { (presetId, name) ->
+                            TextButton(onClick = {
+                                equalizer.usePreset(presetId)
+                                selectedPreset = presetId
+                                refreshToken++
+                            }) {
+                                Text(
+                                    text = name,
+                                    color = if (selectedPreset == presetId) Color(0xFF8B5CF6) else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                        TextButton(onClick = {
+                            selectedPreset = PlayerEqualizer.CUSTOM_PRESET
+                            refreshToken++
+                        }) {
+                            Text(
+                                text = "Personalizado",
+                                color = if (selectedPreset == PlayerEqualizer.CUSTOM_PRESET) Color(0xFF8B5CF6) else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+                    val range = equalizer.bandLevelRange()
+                    repeat(equalizer.bandCount()) { band ->
+                        val freq = equalizer.centerFreqHz(band)
+                        var bandLevel by remember(refreshToken, band) { mutableStateOf(equalizer.bandLevel(band).toFloat()) }
+                        Text("${freq}Hz", style = MaterialTheme.typography.bodySmall)
+                        Slider(
+                            value = bandLevel,
+                            onValueChange = {
+                                bandLevel = it
+                                equalizer.setBandLevel(band, it.toInt().toShort())
+                                selectedPreset = PlayerEqualizer.CUSTOM_PRESET
+                            },
+                            valueRange = range.start.toFloat()..range.endInclusive.toFloat()
+                        )
+                    }
+                }
             }
         },
-
-        // 🎯 COLORES (se dejan transparentes porque el diseño es personalizado)
-        colors = SliderDefaults.colors(
-            thumbColor = Color.Unspecified,
-            activeTrackColor = Color.Transparent,
-            inactiveTrackColor = Color.Transparent
-        )
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cerrar")
+            }
+        }
     )
 }
 
