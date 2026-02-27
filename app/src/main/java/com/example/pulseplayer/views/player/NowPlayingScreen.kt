@@ -2,6 +2,7 @@ package com.example.pulseplayer.views.player
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
@@ -37,6 +40,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -54,18 +58,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.pulseplayer.R
 import com.example.pulseplayer.data.PulsePlayerDatabase
-import com.example.pulseplayer.data.entity.Song
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun NowPlayingScreen(
-    navController: androidx.navigation.NavController,
+    navController: NavController,
     songId: Int,
     songIds: List<Int>,
     viewModel: PlayerViewModel = viewModel()
@@ -83,9 +88,7 @@ fun NowPlayingScreen(
     var showEqDialog by remember { mutableStateOf(false) }
 
     val equalizer = remember { PlayerEqualizer { viewModel.getPlayer() } }
-    DisposableEffect(Unit) {
-        onDispose { equalizer.release() }
-    }
+    DisposableEffect(Unit) { onDispose { equalizer.release() } }
 
     LaunchedEffect(currentSong?.idSong) { viewModel.checkIfCurrentSongIsFavorite() }
 
@@ -110,34 +113,144 @@ fun NowPlayingScreen(
         }
     }
 
-    if (currentSong == null) {
-        Box(
-            modifier = Modifier.fillMaxSize().background(Color(0xFF060911)),
-            contentAlignment = Alignment.Center
-        ) { CircularProgressIndicator(color = Color.White) }
+    val song = currentSong
+    if (song == null) {
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF060911)), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = Color.White)
+        }
         return
     }
 
     Scaffold(
-        containerColor = Color(0xFF060911),
+        containerColor = Color(0xFF05060D),
         bottomBar = {
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                    .padding(bottom = 6.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(4.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.28f))
+                )
+            }
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.verticalGradient(listOf(Color(0xFF0A0A14), Color(0xFF090B1A), Color(0xFF06070F))))
+                .padding(padding)
+                .padding(horizontal = 18.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                GlassIconButton(icon = Icons.Default.KeyboardArrowLeft) { navController.popBackStack() }
+                Text(
+                    text = "REPRODUCIENDO AHORA",
+                    color = Color.White.copy(alpha = 0.5f),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                GlassIconButton(icon = Icons.Default.MoreVert) {}
+            }
+
+            Spacer(Modifier.height(32.dp))
+            Box {
+                Box(
+                    modifier = Modifier
+                        .size(250.dp)
+                        .clip(RoundedCornerShape(30.dp))
+                        .background(Brush.linearGradient(listOf(Color(0xFF5B21B6), Color(0xFF1E3A8A), Color(0xFF0F172A))))
+                        .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(30.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            model = if (song.coverImage?.isEmpty() == true) R.drawable.ic_music_placeholder else song.coverImage
+                        ),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(RoundedCornerShape(30.dp))
+                        .background(Color.Black.copy(alpha = 0.28f))
+                )
+            }
+
+            Spacer(Modifier.height(28.dp))
+            Text(song.title, color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(song.artistName, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.titleMedium)
+            Text(song.album.orEmpty(), color = Color.White.copy(alpha = 0.45f), style = MaterialTheme.typography.bodyMedium)
+
+            Spacer(Modifier.height(28.dp))
+            Slider(
+                value = currentPosition.coerceAtMost(duration).toFloat(),
+                onValueChange = { exoPlayer?.seekTo(it.toLong()) },
+                valueRange = 0f..duration.toFloat(),
+                colors = SliderDefaults.colors(
+                    thumbColor = Color(0xFF6D4AFF),
+                    activeTrackColor = Color(0xFF6D4AFF),
+                    inactiveTrackColor = Color.White.copy(alpha = 0.25f)
+                )
+            )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(formatDuration(currentPosition), color = Color.White.copy(alpha = 0.7f))
+                Text(formatDuration(duration), color = Color.White.copy(alpha = 0.7f))
+            }
+
+            Spacer(Modifier.height(18.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { viewModel.toggleShuffleMode() }) {
                     Icon(Icons.Default.Shuffle, null, tint = Color.White.copy(alpha = 0.75f))
                 }
-                IconButton(onClick = { viewModel.playPrevious() }, enabled = canPlayPrevious) {
-                    Icon(Icons.Default.SkipPrevious, null, tint = Color.White, modifier = Modifier.size(34.dp))
+                IconButton(onClick = { viewModel.toggleRepeatMode() }) {
+                    Icon(Icons.Default.Repeat, null, tint = Color.White.copy(alpha = 0.75f))
                 }
+                IconButton(onClick = { viewModel.toggleFavoriteStatus() }) {
+                    Icon(
+                        if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        null,
+                        tint = if (isFavorite) Color(0xFFFB7185) else Color.White.copy(alpha = 0.75f)
+                    )
+                }
+                IconButton(onClick = { showEqDialog = true }) {
+                    Icon(Icons.Default.Equalizer, null, tint = Color.White.copy(alpha = 0.85f))
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { viewModel.playPrevious() }, enabled = canPlayPrevious) {
+                    Icon(Icons.Default.SkipPrevious, null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(34.dp))
+                }
+
                 Box(
                     modifier = Modifier
-                        .size(70.dp)
+                        .size(68.dp)
                         .clip(CircleShape)
                         .background(Brush.linearGradient(listOf(Color(0xFF7C3AED), Color(0xFF4F46E5)))),
                     contentAlignment = Alignment.Center
@@ -147,84 +260,37 @@ fun NowPlayingScreen(
                             if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                             null,
                             tint = Color.White,
-                            modifier = Modifier.size(34.dp)
+                            modifier = Modifier.size(36.dp)
                         )
                     }
                 }
+
                 IconButton(onClick = { viewModel.playNext() }, enabled = canPlayNext) {
-                    Icon(Icons.Default.SkipNext, null, tint = Color.White, modifier = Modifier.size(34.dp))
-                }
-                IconButton(onClick = { viewModel.toggleRepeatMode() }) {
-                    Icon(Icons.Default.Repeat, null, tint = Color.White.copy(alpha = 0.75f))
+                    Icon(Icons.Default.SkipNext, null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(34.dp))
                 }
             }
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(Color(0xFF090B1A), Color(0xFF05060D))))
-                .padding(padding)
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Reproduciendo", color = Color.White, style = MaterialTheme.typography.titleLarge)
-                Row {
-                    IconButton(onClick = { showEqDialog = true }) {
-                        Icon(Icons.Default.Equalizer, contentDescription = "Ecualizador", tint = Color(0xFFA78BFA))
-                    }
-                    IconButton(onClick = { viewModel.toggleFavoriteStatus() }) {
-                        Icon(
-                            if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Favorito",
-                            tint = if (isFavorite) Color(0xFFFB7185) else Color.White
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-            Image(
-                painter = rememberAsyncImagePainter(
-                    model = if (currentSong!!.coverImage?.isEmpty() == true) R.drawable.ic_music_placeholder else currentSong!!.coverImage
-                ),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(320.dp)
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(Color(0xFF111827))
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(currentSong!!.title, color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Text(currentSong!!.artistName, color = Color.White.copy(alpha = 0.6f), style = MaterialTheme.typography.bodyLarge)
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Slider(
-                value = currentPosition.toFloat(),
-                onValueChange = { exoPlayer?.seekTo(it.toLong()) },
-                valueRange = 0f..duration.toFloat()
-            )
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(formatDuration(currentPosition), color = Color.White.copy(alpha = 0.7f))
-                Text(formatDuration(duration), color = Color.White.copy(alpha = 0.7f))
-            }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
         }
     }
 
     if (showEqDialog) {
-        EqualizerDialog(
-            equalizer = equalizer,
-            onDismiss = { showEqDialog = false }
-        )
+        EqualizerDialog(equalizer = equalizer, onDismiss = { showEqDialog = false })
+    }
+}
+
+@Composable
+private fun GlassIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.06f))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(12.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        IconButton(onClick = onClick) {
+            Icon(icon, contentDescription = null, tint = Color.White.copy(alpha = 0.65f))
+        }
     }
 }
 
@@ -290,8 +356,6 @@ private fun EqualizerDialog(equalizer: PlayerEqualizer, onDismiss: () -> Unit) {
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Icon(Icons.Default.Settings, contentDescription = null)
-                Spacer(Modifier.width(6.dp))
                 Text("Cerrar")
             }
         }
