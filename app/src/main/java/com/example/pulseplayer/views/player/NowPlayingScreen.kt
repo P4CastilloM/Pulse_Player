@@ -291,10 +291,17 @@ private fun AlbumArtWithGlow(coverImage: String?, glowColor: Color, size: androi
     Box(contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
-                .size(size + 70.dp)
-                .blur(46.dp)
-                .background(glowColor.copy(alpha = 0.42f), CircleShape)
+                .size(size + 120.dp)
+                .blur(62.dp)
+                .background(glowColor.copy(alpha = 0.26f), CircleShape)
         )
+        Box(
+            modifier = Modifier
+                .size(size + 64.dp)
+                .blur(34.dp)
+                .background(glowColor.copy(alpha = 0.34f), RoundedCornerShape(44.dp))
+        )
+
         Box(
             modifier = Modifier
                 .size(size)
@@ -309,11 +316,10 @@ private fun AlbumArtWithGlow(coverImage: String?, glowColor: Color, size: androi
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-            Box(modifier = Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.22f)))
+            Box(modifier = Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.18f)))
         }
     }
 }
-
 @Composable
 private fun SongTexts(song: com.example.pulseplayer.data.entity.Song) {
     Text(song.title, color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
@@ -329,16 +335,15 @@ private fun PlayerProgress(currentPosition: Long, duration: Long, onSeek: (Float
         valueRange = 0f..duration.toFloat(),
         colors = SliderDefaults.colors(
             thumbColor = Color(0xFF6D4AFF),
-            activeTrackColor = Color.White.copy(alpha = 0.9f),
-            inactiveTrackColor = Color.White.copy(alpha = 0.20f)
+            activeTrackColor = Color.White.copy(alpha = 0.24f),
+            inactiveTrackColor = Color.White.copy(alpha = 0.24f)
         )
     )
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(formatDuration(currentPosition), color = Color.White.copy(alpha = 0.7f))
-        Text(formatDuration(duration), color = Color.White.copy(alpha = 0.7f))
+        Text(formatDuration(currentPosition), color = Color(0xFFA8B0C8), style = MaterialTheme.typography.labelMedium)
+        Text(formatDuration(duration), color = Color(0xFFA8B0C8), style = MaterialTheme.typography.labelMedium)
     }
 }
-
 @Composable
 private fun ModeButtons(isFavorite: Boolean, onShuffle: () -> Unit, onRepeat: () -> Unit, onFavorite: () -> Unit, onEq: () -> Unit) {
     Row(
