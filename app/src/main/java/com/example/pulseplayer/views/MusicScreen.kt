@@ -48,7 +48,6 @@ import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlayerViewModel
 import com.example.pulseplayer.views.viewmodel.SongViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicScreen(navController: NavController) {
     val songViewModel: SongViewModel = viewModel()
