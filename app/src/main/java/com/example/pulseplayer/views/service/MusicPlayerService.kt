@@ -12,9 +12,9 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import androidx.media.app.NotificationCompat.MediaStyle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import com.example.pulseplayer.MainActivity
@@ -111,25 +111,38 @@ class MusicPlayerService : Service() {
 
         val artwork = getBitmapFromUri(song.coverImage)
 
+        val customView = RemoteViews(packageName, R.layout.notification_music_player).apply {
+            setTextViewText(R.id.text_title, song.title.ifBlank { "Pulse Player" })
+            setTextViewText(R.id.text_artist, song.artistName.ifBlank { "Artista desconocido" })
+            setImageViewResource(
+                R.id.btn_play_pause,
+                if (isPlaying) R.drawable.ic_notif_pause else R.drawable.ic_notif_play
+            )
+
+            if (artwork != null) {
+                setImageViewBitmap(R.id.image_cover, artwork)
+            } else {
+                setImageViewResource(R.id.image_cover, R.drawable.ic_music_placeholder)
+            }
+
+            setOnClickPendingIntent(R.id.notification_layout, openAppIntent)
+            setOnClickPendingIntent(R.id.btn_prev, prevIntent)
+            setOnClickPendingIntent(R.id.btn_play_pause, playPauseIntent)
+            setOnClickPendingIntent(R.id.btn_next, nextIntent)
+            setOnClickPendingIntent(R.id.btn_close, stopIntent)
+        }
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.logo_ico)
             .setColor(ContextCompat.getColor(this, R.color.pulse_blue))
-            .setContentTitle(song.title.ifBlank { "Pulse Player" })
-            .setContentText(song.artistName.ifBlank { "Artista desconocido" })
-            .setLargeIcon(artwork)
             .setContentIntent(openAppIntent)
             .setDeleteIntent(stopIntent)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOnlyAlertOnce(true)
             .setOngoing(isPlaying)
-            .addAction(R.drawable.back2_icon, getString(R.string.previous), prevIntent)
-            .addAction(
-                if (isPlaying) R.drawable.pause2_icon else R.drawable.play2_icon,
-                if (isPlaying) getString(R.string.pause) else getString(R.string.play),
-                playPauseIntent
-            )
-            .addAction(R.drawable.skip2_icon, getString(R.string.next), nextIntent)
-            .setStyle(MediaStyle().setShowActionsInCompactView(0, 1, 2))
+            .setCustomContentView(customView)
+            .setCustomBigContentView(customView)
+            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
 
