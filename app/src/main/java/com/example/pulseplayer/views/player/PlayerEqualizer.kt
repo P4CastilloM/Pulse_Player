@@ -47,7 +47,6 @@ class PlayerEqualizer(private val playerProvider: () -> ExoPlayer?) {
     fun setBandLevel(index: Int, value: Short) {
         if (!ensureReady()) return
         equalizer?.setBandLevel(index.toShort(), value)
-        equalizer?.usePreset(Equalizer.PRESET_UNDEFINED)
     }
 
     fun centerFreqHz(index: Int): Int {
@@ -58,18 +57,26 @@ class PlayerEqualizer(private val playerProvider: () -> ExoPlayer?) {
     fun presets(): List<Pair<Short, String>> {
         if (!ensureReady()) return emptyList()
         val eq = equalizer ?: return emptyList()
-        return (0 until eq.numberOfPresets).map { preset ->
-            preset to (eq.getPresetName(preset) ?: "Preset $preset")
+        val presetCount = eq.numberOfPresets.toInt()
+        return (0 until presetCount).map { index ->
+            val presetId = index.toShort()
+            presetId to eq.getPresetName(presetId)
         }
     }
 
     fun currentPreset(): Short {
-        if (!ensureReady()) return Equalizer.PRESET_UNDEFINED
-        return equalizer?.currentPreset ?: Equalizer.PRESET_UNDEFINED
+        if (!ensureReady()) return CUSTOM_PRESET
+        val eq = equalizer ?: return CUSTOM_PRESET
+        return try {
+            eq.currentPreset
+        } catch (_: Exception) {
+            CUSTOM_PRESET
+        }
     }
 
     fun usePreset(preset: Short) {
         if (!ensureReady()) return
+        if (preset == CUSTOM_PRESET) return
         equalizer?.usePreset(preset)
     }
 
@@ -77,5 +84,9 @@ class PlayerEqualizer(private val playerProvider: () -> ExoPlayer?) {
         equalizer?.release()
         equalizer = null
         boundSessionId = null
+    }
+
+    companion object {
+        const val CUSTOM_PRESET: Short = -1
     }
 }

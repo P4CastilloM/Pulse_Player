@@ -1,6 +1,5 @@
 package com.example.pulseplayer.views.player
 
-import android.media.audiofx.Equalizer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -260,12 +259,12 @@ private fun EqualizerDialog(equalizer: PlayerEqualizer, onDismiss: () -> Unit) {
                             }
                         }
                         TextButton(onClick = {
-                            selectedPreset = Equalizer.PRESET_UNDEFINED
+                            selectedPreset = PlayerEqualizer.CUSTOM_PRESET
                             refreshToken++
                         }) {
                             Text(
                                 text = "Personalizado",
-                                color = if (selectedPreset == Equalizer.PRESET_UNDEFINED) Color(0xFF8B5CF6) else MaterialTheme.colorScheme.onSurface
+                                color = if (selectedPreset == PlayerEqualizer.CUSTOM_PRESET) Color(0xFF8B5CF6) else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -281,7 +280,7 @@ private fun EqualizerDialog(equalizer: PlayerEqualizer, onDismiss: () -> Unit) {
                             onValueChange = {
                                 bandLevel = it
                                 equalizer.setBandLevel(band, it.toInt().toShort())
-                                selectedPreset = Equalizer.PRESET_UNDEFINED
+                                selectedPreset = PlayerEqualizer.CUSTOM_PRESET
                             },
                             valueRange = range.start.toFloat()..range.endInclusive.toFloat()
                         )
