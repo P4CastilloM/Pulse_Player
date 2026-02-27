@@ -5,6 +5,8 @@ import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -44,7 +47,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -62,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.DpSize
@@ -342,30 +345,76 @@ private fun SongTexts(song: com.example.pulseplayer.data.entity.Song) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayerProgress(currentPosition: Long, duration: Long, onSeek: (Float) -> Unit) {
-    Slider(
-        value = currentPosition.coerceAtMost(duration).toFloat(),
-        onValueChange = onSeek,
-        valueRange = 0f..duration.toFloat(),
-        thumb = {
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF6D4AFF))
-            )
-        },
-        colors = SliderDefaults.colors(
-            thumbColor = Color(0xFF6D4AFF),
-            activeTrackColor = Color.White.copy(alpha = 0.22f),
-            inactiveTrackColor = Color.White.copy(alpha = 0.22f)
-        ),
-        modifier = Modifier.height(14.dp)
-    )
+    val safeDuration = duration.coerceAtLeast(1L)
+    val progressFraction = (currentPosition.coerceAtMost(safeDuration).toFloat() / safeDuration.toFloat()).coerceIn(0f, 1f)
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(18.dp)
+            .pointerInput(safeDuration) {
+                val width = size.width.toFloat().coerceAtLeast(1f)
+
+                fun positionToValue(x: Float): Float {
+                    val normalized = (x / width).coerceIn(0f, 1f)
+                    return normalized * safeDuration.toFloat()
+                }
+
+                detectTapGestures { offset ->
+                    onSeek(positionToValue(offset.x))
+                }
+            }
+            .pointerInput(safeDuration) {
+                val width = size.width.toFloat().coerceAtLeast(1f)
+
+                fun positionToValue(x: Float): Float {
+                    val normalized = (x / width).coerceIn(0f, 1f)
+                    return normalized * safeDuration.toFloat()
+                }
+
+                detectDragGestures { change, _ ->
+                    onSeek(positionToValue(change.position.x))
+                }
+            }
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .align(Alignment.CenterStart)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.22f))
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progressFraction)
+                .height(3.dp)
+                .align(Alignment.CenterStart)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.30f))
+        )
+
+        val thumbDiameter = 10.dp
+        val thumbCenterX = (maxWidth * progressFraction)
+        val maxThumbOffset = (maxWidth - thumbDiameter).coerceAtLeast(0.dp)
+        val thumbOffset = (thumbCenterX - (thumbDiameter / 2)).coerceIn(0.dp, maxThumbOffset)
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .offset(x = thumbOffset)
+                .size(thumbDiameter)
+                .clip(CircleShape)
+                .background(Color(0xFF6D4AFF))
+        )
+    }
+
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(formatDuration(currentPosition), color = Color(0xFFA8B0C8), style = MaterialTheme.typography.labelMedium)
         Text(formatDuration(duration), color = Color(0xFFA8B0C8), style = MaterialTheme.typography.labelMedium)
     }
 }
+
 @Composable
 private fun ModeButtons(isFavorite: Boolean, onShuffle: () -> Unit, onRepeat: () -> Unit, onFavorite: () -> Unit, onEq: () -> Unit) {
     Row(
