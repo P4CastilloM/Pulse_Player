@@ -51,10 +51,10 @@ fun FavoriteScreen(
                     Text(
                         text = stringResource(R.string.favorites_screen_title),
                         style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = Color.White,
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF090B1A))
             )
         },
         bottomBar = {
@@ -63,13 +63,13 @@ fun FavoriteScreen(
                 modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = Color(0xFF060911)
     ) { padding ->
         LazyColumn(
             contentPadding = padding,
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(Color(0xFF060911))
         ) {
             if (favorites.isEmpty()) {
                 item {
