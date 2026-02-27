@@ -27,11 +27,11 @@ class PlayerEqualizer(private val playerProvider: () -> ExoPlayer?) {
     }
 
     fun bandLevelRange(): ClosedRange<Short> {
-        if (!ensureReady()) return (-1500).toShort()..1500.toShort()
+        if (!ensureReady()) return shortRange((-1500).toShort(), 1500.toShort())
         val range = equalizer?.bandLevelRange
         val min = range?.getOrNull(0) ?: (-1500).toShort()
         val max = range?.getOrNull(1) ?: 1500.toShort()
-        return min..max
+        return shortRange(min, max)
     }
 
     fun bandCount(): Int {
@@ -85,6 +85,12 @@ class PlayerEqualizer(private val playerProvider: () -> ExoPlayer?) {
         equalizer = null
         boundSessionId = null
     }
+
+    private fun shortRange(startValue: Short, endValue: Short): ClosedRange<Short> =
+        object : ClosedRange<Short> {
+            override val start: Short = startValue
+            override val endInclusive: Short = endValue
+        }
 
     companion object {
         const val CUSTOM_PRESET: Short = -1
