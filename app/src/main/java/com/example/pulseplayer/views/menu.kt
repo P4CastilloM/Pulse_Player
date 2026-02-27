@@ -109,6 +109,8 @@ fun MenuScreen(navController: NavController) {
                 }
             }
 
+            Spacer(modifier = Modifier.weight(1f))
+
             MiniPlayerBar(
                 navController = navController,
                 modifier = Modifier
@@ -165,7 +167,7 @@ private fun HomeHeader() {
             }
             Spacer(Modifier.width(12.dp))
             Column {
-                Text("Pulse Player", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 28.sp)
+                Text("Pulse Player", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Text("Reproductor Local", color = Color.White.copy(alpha = 0.45f), fontSize = 13.sp)
             }
         }
@@ -205,7 +207,7 @@ private fun HeroMusicCard(onClick: () -> Unit) {
             ) {
                 Icon(Icons.Rounded.MusicNote, contentDescription = null, tint = Color.White, modifier = Modifier.size(34.dp))
             }
-            Text("Música", color = Color.White, fontSize = 42.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 10.dp))
+            Text("Música", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 10.dp))
             Text("Explorar biblioteca", color = Color.White.copy(alpha = 0.6f), fontSize = 15.sp)
         }
     }
