@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.pulseplayer.data.entity.Song
+import com.example.pulseplayer.views.AlbumsScreen
 import com.example.pulseplayer.views.MenuScreen
 import com.example.pulseplayer.views.MusicScreen
 import com.example.pulseplayer.views.favorite.FavoriteScreen
@@ -27,6 +28,9 @@ object Menu
 // MUSICA
 @Serializable
 object Music
+
+@Serializable
+object Albums
 
 @Serializable
 data class NowPlaying(val songId: Int, val songIds: List<Int> )
@@ -65,6 +69,9 @@ fun Navigation(songs: List<Song>){
         }
         composable<Music> {
             MusicScreen(navController = navController) // ✅ corregido
+        }
+        composable<Albums> {
+            AlbumsScreen(navController = navController)
         }
         composable<NowPlaying> { backStackEntry ->
             val args = backStackEntry.toRoute<NowPlaying>()
