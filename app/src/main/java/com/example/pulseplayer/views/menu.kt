@@ -54,15 +54,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.pulseplayer.Albums
-import com.example.pulseplayer.FavoriteScreen
-import com.example.pulseplayer.Music
-import com.example.pulseplayer.PlaybackHistoryScreen
-import com.example.pulseplayer.SmartPlaylists
-import com.example.pulseplayer.UnheardIn30Days
-import com.example.pulseplayer.PlaylistScreen
-import com.example.pulseplayer.SmartPlaylists
-import com.example.pulseplayer.UnheardIn30Days
+import com.example.pulseplayer.Albums as AlbumsRoute
+import com.example.pulseplayer.FavoriteScreen as FavoriteRoute
+import com.example.pulseplayer.Music as MusicRoute
+import com.example.pulseplayer.PlaybackHistoryScreen as PlaybackHistoryRoute
+import com.example.pulseplayer.PlaylistScreen as PlaylistRoute
+import com.example.pulseplayer.SmartPlaylists as SmartPlaylistsRoute
+import com.example.pulseplayer.UnheardIn30Days as UnheardIn30DaysRoute
 import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlaylistViewModel
 import com.example.pulseplayer.views.viewmodel.SongViewModel
@@ -82,12 +80,12 @@ fun MenuScreen(navController: NavController) {
         .size
 
     val categories = listOf(
-        LibraryCategory("Álbumes", "$albumCount álbumes", Icons.Outlined.Album, Color(0xFF8B5CF6)) { navController.navigate(Albums) },
-        LibraryCategory("Listas", "${playlists.size} listas", Icons.Outlined.QueueMusic, Color(0xFF60A5FA)) { navController.navigate(PlaylistScreen) },
-        LibraryCategory("Historial", "Recientes", Icons.Outlined.AccessTime, Color(0xFF34D399)) { navController.navigate(PlaybackHistoryScreen) },
-        LibraryCategory("Favoritos", "${songs.count { it.isFavorite }} canciones", Icons.Outlined.FavoriteBorder, Color(0xFFFB7185)) { navController.navigate(FavoriteScreen) },
-        LibraryCategory("Smart Playlists", "Automáticas", Icons.Outlined.LibraryMusic, Color(0xFF22D3EE)) { navController.navigate(SmartPlaylists) },
-        LibraryCategory("No escuchadas", "Últimos 30 días", Icons.Outlined.Search, Color(0xFFFBBF24)) { navController.navigate(UnheardIn30Days) }
+        LibraryCategory("Álbumes", "$albumCount álbumes", Icons.Outlined.Album, Color(0xFF8B5CF6)) { navController.navigate(AlbumsRoute) },
+        LibraryCategory("Listas", "${playlists.size} listas", Icons.Outlined.QueueMusic, Color(0xFF60A5FA)) { navController.navigate(PlaylistRoute) },
+        LibraryCategory("Historial", "Recientes", Icons.Outlined.AccessTime, Color(0xFF34D399)) { navController.navigate(PlaybackHistoryRoute) },
+        LibraryCategory("Favoritos", "${songs.count { it.isFavorite }} canciones", Icons.Outlined.FavoriteBorder, Color(0xFFFB7185)) { navController.navigate(FavoriteRoute) },
+        LibraryCategory("Smart Playlists", "Automáticas", Icons.Outlined.LibraryMusic, Color(0xFF22D3EE)) { navController.navigate(SmartPlaylistsRoute) },
+        LibraryCategory("No escuchadas", "Últimos 30 días", Icons.Outlined.Search, Color(0xFFFBBF24)) { navController.navigate(UnheardIn30DaysRoute) }
     )
 
     Box(
@@ -104,7 +102,7 @@ fun MenuScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
         ) {
             HomeHeader()
-            HeroMusicCard(onClick = { navController.navigate(Music) }, isCompact = isLandscape)
+            HeroMusicCard(onClick = { navController.navigate(MusicRoute) }, isCompact = isLandscape)
 
             Text(
                 text = "BIBLIOTECA",
@@ -148,8 +146,8 @@ fun MenuScreen(navController: NavController) {
 
             BottomNavStrip(
                 onHomeClick = {},
-                onSearchClick = { navController.navigate(Music) },
-                onLibraryClick = { navController.navigate(Albums) },
+                onSearchClick = { navController.navigate(MusicRoute) },
+                onLibraryClick = { navController.navigate(AlbumsRoute) },
                 modifier = Modifier.padding(top = 16.dp)
             )
 
