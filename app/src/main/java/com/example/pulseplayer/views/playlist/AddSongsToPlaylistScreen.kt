@@ -1,4 +1,4 @@
-package com.example.pulseplayer.views.playlist // Asegúrate de que este sea el paquete correcto
+package com.example.pulseplayer.views.playlist
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
@@ -11,21 +11,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.* // Importar todo de Material3 para asegurar acceso
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.pulseplayer.R
@@ -34,10 +33,9 @@ import com.example.pulseplayer.data.entity.PlaylistSong
 import com.example.pulseplayer.data.entity.Song
 import com.example.pulseplayer.isLandscape
 import com.example.pulseplayer.ui.components.MiniPlayerBar
-import com.example.pulseplayer.views.viewmodel.PlayerViewModel // Puede que necesites este si MiniPlayerBar lo usa
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,11 +48,11 @@ fun AddSongsToPlaylistScreen(navController: NavController, playlistId: Int) {
     val songDao = remember { PulsePlayerDatabase.getDatabase(context).songDao() }
     val playlistSongDao = remember { PulsePlayerDatabase.getDatabase(context).playlistSongDao() }
 
-    val selectedSongs = remember { mutableStateListOf<Song>() } // Usamos mutableStateListOf para observables de lista
+    val selectedSongs = remember { mutableStateListOf<Song>() }
 
     LaunchedEffect(Unit) {
         scope.launch(Dispatchers.IO) {
-            allSongs = songDao.getAll().first() // Obtener todas las canciones una sola vez
+            allSongs = songDao.getAll().first()
         }
     }
 
@@ -64,79 +62,45 @@ fun AddSongsToPlaylistScreen(navController: NavController, playlistId: Int) {
                 title = {
                     Text(
                         text = stringResource(R.string.playlist_add_song),
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = Color.White,
+                        fontSize = 34.sp,
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary),
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.White)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF090B1A)),
             )
         },
         floatingActionButton = {
             val isFabEnabled = selectedSongs.isNotEmpty()
 
-            if (isLandscape()) {
-                FloatingActionButton(
-                    onClick = {
-                        if (isFabEnabled) {
-                            scope.launch(Dispatchers.IO) { // Ejecuta la inserción en el hilo de fondo
-                                var currentOrder = 0
-
-                                selectedSongs.forEach { song ->
-                                    playlistSongDao.insert(
-                                        PlaylistSong(
-                                            playlistId = playlistId,
-                                            songId = song.idSong,
-                                            songOrder = currentOrder++
-                                        )
+            val fabModifier = if (isLandscape()) Modifier.navigationBarsPadding() else Modifier
+            FloatingActionButton(
+                onClick = {
+                    if (isFabEnabled) {
+                        scope.launch(Dispatchers.IO) {
+                            var currentOrder = 0
+                            selectedSongs.forEach { song ->
+                                playlistSongDao.insert(
+                                    PlaylistSong(
+                                        playlistId = playlistId,
+                                        songId = song.idSong,
+                                        songOrder = currentOrder++
                                     )
-                                }
-                                // Después de la operación de base de datos, cambia al hilo principal para navegar
-                                withContext(Dispatchers.Main) {
-                                    navController.popBackStack() // <<<<<<<<<<<<<< AHORA EN EL HILO PRINCIPAL
-                                }
+                                )
                             }
+                            withContext(Dispatchers.Main) { navController.popBackStack() }
                         }
-                    },
-                    containerColor = Color(0xFF9C27B0),
-                    contentColor = Color.White,
-                    modifier = Modifier.navigationBarsPadding(),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check, // Usar imageVector
-                        contentDescription = "Añadir seleccionadas"
-                    )
-                }
-            } else {
-                FloatingActionButton(
-                    onClick = {
-                        if (isFabEnabled) {
-                            scope.launch(Dispatchers.IO) { // Ejecuta la inserción en el hilo de fondo
-                                var currentOrder = 0
-
-                                selectedSongs.forEach { song ->
-                                    playlistSongDao.insert(
-                                        PlaylistSong(
-                                            playlistId = playlistId,
-                                            songId = song.idSong,
-                                            songOrder = currentOrder++
-                                        )
-                                    )
-                                }
-                                // Después de la operación de base de datos, cambia al hilo principal para navegar
-                                withContext(Dispatchers.Main) {
-                                    navController.popBackStack() // <<<<<<<<<<<<<< AHORA EN EL HILO PRINCIPAL
-                                }
-                            }
-                        }
-                    },
-                    containerColor = Color(0xFF9C27B0),
-                    contentColor = Color.White,
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check, // Usar imageVector
-                        contentDescription = "Añadir seleccionadas"
-                    )
-                }
+                    }
+                },
+                containerColor = Color(0xFF9C27B0),
+                contentColor = Color.White,
+                modifier = fabModifier,
+            ) {
+                Icon(imageVector = Icons.Default.Check, contentDescription = "Añadir seleccionadas")
             }
         },
         bottomBar = {
@@ -145,13 +109,13 @@ fun AddSongsToPlaylistScreen(navController: NavController, playlistId: Int) {
                 modifier = Modifier.fillMaxWidth().wrapContentHeight().navigationBarsPadding(),
             )
         },
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color(0xFF060911),
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.background)
+                .background(Color(0xFF060911))
         ) {
             if (allSongs.isEmpty()) {
                 Box(
@@ -160,8 +124,7 @@ fun AddSongsToPlaylistScreen(navController: NavController, playlistId: Int) {
                 ) {
                     Text(
                         text = "No hay canciones disponibles.",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = Color.White.copy(alpha = 0.5f),
                     )
                 }
             } else {
@@ -192,26 +155,31 @@ fun AddSongsToPlaylistScreen(navController: NavController, playlistId: Int) {
 @Composable
 fun SelectableSongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit) {
     val borderColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0xFF9C27B0) else Color.Transparent,
+        targetValue = if (isSelected) Color(0xFF9C27B0) else Color.White.copy(alpha = 0.07f),
         label = "borderColor"
     )
-    val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0xFF3A004C) else Color(0xFF1C1C1E),
-        label = "backgroundColor"
+    val iconColor by animateColorAsState(
+        targetValue = if (isSelected) Color(0xFFC968FF) else Color.White.copy(alpha = 0.5f),
+        label = "iconColor"
     )
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp)
-            .border(2.dp, borderColor, shape = RoundedCornerShape(16.dp))
+            .border(1.dp, borderColor, shape = RoundedCornerShape(18.dp))
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        shape = RoundedCornerShape(18.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(
+                        listOf(Color(0xFF121A31), Color(0xFF0A132B))
+                    )
+                )
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -234,28 +202,30 @@ fun SelectableSongCardItem(song: Song, isSelected: Boolean, onClick: () -> Unit)
                 Text(
                     text = song.title,
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White,
                 )
                 Text(
-                    text = song.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    text = song.artistName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.62f),
                 )
             }
 
             if (isSelected) {
                 Icon(
-                    imageVector = Icons.Default.Check, // Usar imageVector
+                    imageVector = Icons.Default.Check,
                     contentDescription = "Seleccionado",
-                    tint = Color(0xFF9C27B0),
-                    modifier = Modifier.size(24.dp).padding(end = 4.dp)
+                    tint = iconColor,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .padding(end = 4.dp)
                 )
             }
 
             Text(
                 text = song.formattedDuration,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = Color.White.copy(alpha = 0.88f),
             )
         }
     }
