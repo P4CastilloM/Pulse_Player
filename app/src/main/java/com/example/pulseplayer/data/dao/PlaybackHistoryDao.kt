@@ -6,7 +6,10 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.example.pulseplayer.data.entity.GenrePlayStat
+import com.example.pulseplayer.data.entity.NamedPlayStat
 import com.example.pulseplayer.data.entity.PlaybackHistory
+import com.example.pulseplayer.data.entity.SmartPlaylistTrack
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -37,5 +40,231 @@ interface PlaybackHistoryDao {
 
     @Query("DELETE FROM playback_history WHERE id_song = :songId")
     suspend fun deleteBySongId(songId: Int)
+
+
+    @Query("""
+        SELECT s.id_song, s.title, s.artist_name, s.cover_image, s.file_path, s.duration_ms, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+        GROUP BY s.id_song
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT :limit
+    """)
+    suspend fun getMostPlayedSince(fromDate: String, limit: Int = 50): List<SmartPlaylistTrack>
+
+    @Query("""
+        SELECT s.id_song, s.title, s.artist_name, s.cover_image, s.file_path, s.duration_ms, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.id_song IN (
+            SELECT id_song
+            FROM playback_history
+            GROUP BY id_song
+            HAVING MIN(played_at) >= :fromDate
+        )
+        GROUP BY s.id_song
+        ORDER BY MIN(h.played_at) DESC
+        LIMIT :limit
+    """)
+    suspend fun getRecentlyDiscovered(fromDate: String, limit: Int = 50): List<SmartPlaylistTrack>
+
+    @Query("""
+        SELECT s.id_song, s.title, s.artist_name, s.cover_image, s.file_path, s.duration_ms, COALESCE(COUNT(h.id), 0) AS play_count
+        FROM song s
+        LEFT JOIN playback_history h ON h.id_song = s.id_song
+        GROUP BY s.id_song
+        HAVING MAX(h.played_at) IS NULL OR MAX(h.played_at) < :cutoffDate
+        ORDER BY COALESCE(MAX(h.played_at), '1900-01-01 00:00:00') ASC, s.title ASC
+        LIMIT :limit
+    """)
+    suspend fun getNotPlayedSince(cutoffDate: String, limit: Int = 50): List<SmartPlaylistTrack>
+
+    @Query("""
+        SELECT s.id_song, s.title, s.artist_name, s.cover_image, s.file_path, s.duration_ms, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE CAST(strftime('%H', h.played_at) AS INTEGER) >= 22
+           OR CAST(strftime('%H', h.played_at) AS INTEGER) < 6
+        GROUP BY s.id_song
+        ORDER BY play_count DESC, s.title ASC
+        LIMIT :limit
+    """)
+    suspend fun getTopNightTracks(limit: Int = 50): List<SmartPlaylistTrack>
+
+    @Query("""
+        SELECT s.id_song, s.title, s.artist_name, s.cover_image, s.file_path, s.duration_ms, COALESCE(COUNT(h.id), 0) AS play_count
+        FROM song s
+        LEFT JOIN playback_history h ON h.id_song = s.id_song
+        WHERE LOWER(s.title) NOT LIKE '%remix%'
+          AND LOWER(COALESCE(s.genre, '')) NOT LIKE '%edm%'
+          AND LOWER(COALESCE(s.genre, '')) NOT LIKE '%dance%'
+          AND LOWER(COALESCE(s.genre, '')) NOT LIKE '%house%'
+        GROUP BY s.id_song
+        ORDER BY play_count ASC, s.duration_ms DESC, s.title ASC
+        LIMIT :limit
+    """)
+    suspend fun getStudyModeTracks(limit: Int = 50): List<SmartPlaylistTrack>
+
+
+
+    @Query("SELECT COUNT(*) FROM playback_history WHERE played_at LIKE :dayPrefix || '%'")
+    suspend fun getCountForDay(dayPrefix: String): Int
+
+    @Query("SELECT COUNT(DISTINCT id_song) FROM playback_history")
+    suspend fun getUniqueTracksCount(): Int
+
+    @Query("""
+        SELECT COALESCE(SUM(COALESCE(h.played_ms, s.duration_ms)), 0)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+    """)
+    suspend fun getTotalListeningMs(): Long
+
+    @Query("""
+        SELECT COALESCE(SUM(COALESCE(h.played_ms, s.duration_ms)), 0)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at LIKE :dayPrefix || '%'
+    """)
+    suspend fun getListeningMsForDay(dayPrefix: String): Long
+
+
+
+    @Query("""
+        SELECT s.title AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        GROUP BY s.id_song
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT 1
+    """)
+    suspend fun getTopSongStat(): NamedPlayStat?
+
+    @Query("""
+        SELECT s.artist_name AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        GROUP BY s.artist_name
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT 1
+    """)
+    suspend fun getTopArtistStat(): NamedPlayStat?
+
+    @Query("""
+        SELECT s.genre AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE s.genre IS NOT NULL AND TRIM(s.genre) != ''
+        GROUP BY s.genre
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT 1
+    """)
+    suspend fun getTopGenreStat(): NamedPlayStat?
+
+    @Query("SELECT COUNT(*) FROM playback_history WHERE played_at >= :fromDate")
+    suspend fun getCountSince(fromDate: String): Int
+
+    @Query("""
+        SELECT COUNT(DISTINCT s.artist_name)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+    """)
+    suspend fun getUniqueArtistsCount(): Int
+
+    @Query("""
+        SELECT COUNT(DISTINCT s.genre)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE s.genre IS NOT NULL AND TRIM(s.genre) != ''
+    """)
+    suspend fun getUniqueGenresCount(): Int
+
+
+
+    @Query("""
+        SELECT COALESCE(SUM(COALESCE(h.played_ms, s.duration_ms)), 0)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+    """)
+    suspend fun getListeningMsSince(fromDate: String): Long
+
+    @Query("SELECT COUNT(DISTINCT id_song) FROM playback_history WHERE played_at >= :fromDate")
+    suspend fun getUniqueTracksSince(fromDate: String): Int
+
+    @Query("""
+        SELECT COUNT(DISTINCT s.artist_name)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+    """)
+    suspend fun getUniqueArtistsSince(fromDate: String): Int
+
+    @Query("""
+        SELECT COUNT(DISTINCT s.genre)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+          AND s.genre IS NOT NULL AND TRIM(s.genre) != ''
+    """)
+    suspend fun getUniqueGenresSince(fromDate: String): Int
+
+    @Query("""
+        SELECT s.title AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+        GROUP BY s.id_song
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT 1
+    """)
+    suspend fun getTopSongStatSince(fromDate: String): NamedPlayStat?
+
+    @Query("""
+        SELECT s.artist_name AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+        GROUP BY s.artist_name
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT 1
+    """)
+    suspend fun getTopArtistStatSince(fromDate: String): NamedPlayStat?
+
+    @Query("""
+        SELECT s.genre AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+          AND s.genre IS NOT NULL AND TRIM(s.genre) != ''
+        GROUP BY s.genre
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT 1
+    """)
+    suspend fun getTopGenreStatSince(fromDate: String): NamedPlayStat?
+
+    @Query("""
+        SELECT s.genre AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE s.genre IS NOT NULL AND TRIM(s.genre) != ''
+        GROUP BY s.genre
+        ORDER BY play_count DESC
+        LIMIT :limit
+    """)
+    suspend fun getGenreDistribution(limit: Int = 5): List<GenrePlayStat>
+
+    @Query("""
+        SELECT s.genre AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+          AND s.genre IS NOT NULL AND TRIM(s.genre) != ''
+        GROUP BY s.genre
+        ORDER BY play_count DESC
+        LIMIT :limit
+    """)
+    suspend fun getGenreDistributionSince(fromDate: String, limit: Int = 5): List<GenrePlayStat>
 
 }
