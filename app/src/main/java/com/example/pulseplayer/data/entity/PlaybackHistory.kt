@@ -16,5 +16,7 @@ import androidx.room.PrimaryKey
 data class PlaybackHistory(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "id_song") val songId: Int,
-    @ColumnInfo(name = "played_at") val playedAt: String // o Date con TypeConverter
+    @ColumnInfo(name = "played_at") val playedAt: String,
+    @ColumnInfo(name = "played_ms") val playedMs: Long? = null,
+    @ColumnInfo(name = "source") val source: String? = null
 )
