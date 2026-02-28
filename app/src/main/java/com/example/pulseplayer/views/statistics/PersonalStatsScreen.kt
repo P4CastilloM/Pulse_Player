@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -317,9 +318,9 @@ private fun GenreDistribution(genres: List<GenrePlayStat>) {
 }
 
 @Composable
-private fun GlassCard(modifier: Modifier = Modifier, content: @Composable Column.() -> Unit) {
+private fun GlassCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0x141FFFFFFF)),
+        colors = CardDefaults.cardColors(containerColor = Color(0x14FFFFFF)),
         shape = RoundedCornerShape(24.dp),
         modifier = modifier.fillMaxWidth()
     ) {
