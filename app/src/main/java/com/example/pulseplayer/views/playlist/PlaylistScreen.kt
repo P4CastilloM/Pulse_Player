@@ -32,6 +32,7 @@ import com.example.pulseplayer.data.entity.Playlist
 import com.example.pulseplayer.isLandscape
 import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlaylistViewModel
+import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -153,14 +154,16 @@ fun PlaylistCard(
     onLongClick: () -> Unit,
     onClick: () -> Unit
 ) {
-    val colors = listOf(
-        listOf(Color(0xFFFF416C), Color(0xFFFF4B2B)),
-        listOf(Color(0xFF2193b0), Color(0xFF6dd5ed)),
-        listOf(Color(0xFF7F00FF), Color(0xFFE100FF)),
-        listOf(Color(0xFFff6a00), Color(0xFFee0979)),
-        listOf(Color(0xFF833ab4), Color(0xFFfd1d1d), Color(0xFFfcb045))
+    val gradients = listOf(
+        listOf(Color(0xFF13203C), Color(0xFF0A132B)),
+        listOf(Color(0xFF1A1F4F), Color(0xFF0A1538)),
+        listOf(Color(0xFF1A2552), Color(0xFF0B193B)),
+        listOf(Color(0xFF16235B), Color(0xFF0D1A45)),
+        listOf(Color(0xFF2B1B4A), Color(0xFF131A3D))
     )
-    val gradient = remember { colors.random() }
+    val gradient = remember(playlist.id, playlist.name) {
+        gradients[(playlist.name.hashCode().absoluteValue + playlist.id) % gradients.size]
+    }
 
     Box(
         modifier = Modifier
@@ -168,8 +171,9 @@ fun PlaylistCard(
             .aspectRatio(1f)
             .clip(RoundedCornerShape(16.dp))
             .background(
-                brush = Brush.horizontalGradient(gradient)
+                brush = Brush.linearGradient(gradient)
             )
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
