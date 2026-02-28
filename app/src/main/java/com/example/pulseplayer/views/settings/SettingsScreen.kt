@@ -34,10 +34,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.pulseplayer.data.PulsePlayerDatabase
+import com.example.pulseplayer.data.entity.NamedPlayStat
 import com.example.pulseplayer.data.local.UserPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -53,6 +55,12 @@ fun SettingsScreen() {
     var uniqueTracks by remember { mutableStateOf(0) }
     var totalListeningMs by remember { mutableLongStateOf(0L) }
     var todayListeningMs by remember { mutableLongStateOf(0L) }
+    var topSong by remember { mutableStateOf<NamedPlayStat?>(null) }
+    var topArtist by remember { mutableStateOf<NamedPlayStat?>(null) }
+    var topGenre by remember { mutableStateOf<NamedPlayStat?>(null) }
+    var weeklyPlays by remember { mutableStateOf(0) }
+    var uniqueArtists by remember { mutableStateOf(0) }
+    var uniqueGenres by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -63,6 +71,12 @@ fun SettingsScreen() {
             uniqueTracks = dao.getUniqueTracksCount()
             totalListeningMs = dao.getTotalListeningMs()
             todayListeningMs = dao.getListeningMsForDay(dayPrefix)
+            topSong = dao.getTopSongStat()
+            topArtist = dao.getTopArtistStat()
+            topGenre = dao.getTopGenreStat()
+            weeklyPlays = dao.getCountSince(daysAgo(7))
+            uniqueArtists = dao.getUniqueArtistsCount()
+            uniqueGenres = dao.getUniqueGenresCount()
         }
     }
 
@@ -117,6 +131,17 @@ fun SettingsScreen() {
                 }
             }
 
+
+            StatsCard(
+                title = "📊 Estadísticas personales",
+                rows = listOf(
+                    "Canción más escuchada" to statLine(topSong),
+                    "Artista más repetido" to statLine(topArtist),
+                    "Género favorito" to statLine(topGenre),
+                    "Horas totales reproducidas" to formatDuration(totalListeningMs)
+                )
+            )
+
             StatsCard(
                 title = "Resumen del día",
                 rows = listOf(
@@ -129,7 +154,10 @@ fun SettingsScreen() {
                 title = "Resumen total",
                 rows = listOf(
                     "Reproducciones totales" to totalPlays.toString(),
+                    "Reproducciones últimos 7 días" to weeklyPlays.toString(),
                     "Canciones distintas" to uniqueTracks.toString(),
+                    "Artistas distintos" to uniqueArtists.toString(),
+                    "Géneros distintos" to uniqueGenres.toString(),
                     "Tiempo total de escucha" to formatDuration(totalListeningMs)
                 )
             )
@@ -159,4 +187,14 @@ private fun formatDuration(ms: Long): String {
     val hours = totalMinutes / 60
     val minutes = totalMinutes % 60
     return if (hours > 0) "${hours}h ${minutes}m" else "${minutes} min"
+}
+
+
+private fun statLine(stat: NamedPlayStat?): String {
+    return if (stat == null) "Sin datos" else "${stat.label} (${stat.playCount})"
+}
+
+private fun daysAgo(days: Int): String {
+    val calendar = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -days) }
+    return SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(calendar.time)
 }

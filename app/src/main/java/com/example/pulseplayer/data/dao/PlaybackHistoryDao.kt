@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.example.pulseplayer.data.entity.NamedPlayStat
 import com.example.pulseplayer.data.entity.PlaybackHistory
 import com.example.pulseplayer.data.entity.SmartPlaylistTrack
 import kotlinx.coroutines.flow.Flow
@@ -126,5 +127,56 @@ interface PlaybackHistoryDao {
         WHERE h.played_at LIKE :dayPrefix || '%'
     """)
     suspend fun getListeningMsForDay(dayPrefix: String): Long
+
+
+
+    @Query("""
+        SELECT s.title AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        GROUP BY s.id_song
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT 1
+    """)
+    suspend fun getTopSongStat(): NamedPlayStat?
+
+    @Query("""
+        SELECT s.artist_name AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        GROUP BY s.artist_name
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT 1
+    """)
+    suspend fun getTopArtistStat(): NamedPlayStat?
+
+    @Query("""
+        SELECT s.genre AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE s.genre IS NOT NULL AND TRIM(s.genre) != ''
+        GROUP BY s.genre
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT 1
+    """)
+    suspend fun getTopGenreStat(): NamedPlayStat?
+
+    @Query("SELECT COUNT(*) FROM playback_history WHERE played_at >= :fromDate")
+    suspend fun getCountSince(fromDate: String): Int
+
+    @Query("""
+        SELECT COUNT(DISTINCT s.artist_name)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+    """)
+    suspend fun getUniqueArtistsCount(): Int
+
+    @Query("""
+        SELECT COUNT(DISTINCT s.genre)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE s.genre IS NOT NULL AND TRIM(s.genre) != ''
+    """)
+    suspend fun getUniqueGenresCount(): Int
 
 }

@@ -62,7 +62,6 @@ import com.example.pulseplayer.Music as MusicRoute
 import com.example.pulseplayer.PlaybackHistoryScreen as PlaybackHistoryRoute
 import com.example.pulseplayer.PlaylistScreen as PlaylistRoute
 import com.example.pulseplayer.SmartPlaylists as SmartPlaylistsRoute
-import com.example.pulseplayer.UnheardIn30Days as UnheardIn30DaysRoute
 import com.example.pulseplayer.SettingsRoute as SettingsRouteAlias
 import com.example.pulseplayer.data.local.UserPreferences
 import com.example.pulseplayer.ui.components.MiniPlayerBar
@@ -92,7 +91,7 @@ fun MenuScreen(navController: NavController) {
         LibraryCategory("Historial", "Recientes", Icons.Outlined.AccessTime, Color(0xFF34D399)) { navController.navigate(PlaybackHistoryRoute) },
         LibraryCategory("Favoritos", "${songs.count { it.isFavorite }} canciones", Icons.Outlined.FavoriteBorder, Color(0xFFFB7185)) { navController.navigate(FavoriteRoute) },
         LibraryCategory("Smart Playlists", "Automáticas", Icons.Outlined.LibraryMusic, Color(0xFF22D3EE)) { navController.navigate(SmartPlaylistsRoute) },
-        LibraryCategory("No escuchadas", "Últimos 30 días", Icons.Outlined.Search, Color(0xFFFBBF24)) { navController.navigate(UnheardIn30DaysRoute) }
+        LibraryCategory("Estadísticas", "Personales", Icons.Outlined.Search, Color(0xFFFBBF24)) { navController.navigate(SettingsRouteAlias) }
     )
 
     Box(
