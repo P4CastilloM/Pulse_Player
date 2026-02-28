@@ -1,5 +1,6 @@
 package com.example.pulseplayer.views
 
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -47,6 +48,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -61,6 +63,8 @@ import com.example.pulseplayer.PlaybackHistoryScreen as PlaybackHistoryRoute
 import com.example.pulseplayer.PlaylistScreen as PlaylistRoute
 import com.example.pulseplayer.SmartPlaylists as SmartPlaylistsRoute
 import com.example.pulseplayer.UnheardIn30Days as UnheardIn30DaysRoute
+import com.example.pulseplayer.SettingsRoute as SettingsRouteAlias
+import com.example.pulseplayer.data.local.UserPreferences
 import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlaylistViewModel
 import com.example.pulseplayer.views.viewmodel.SongViewModel
@@ -73,6 +77,9 @@ fun MenuScreen(navController: NavController) {
     val playlists by playlistViewModel.playlists.collectAsState()
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
+    val context = LocalContext.current
+    val displayName = UserPreferences.getDisplayName(context).ifBlank { "¿Cómo te gustaría que te llame?" }
+    val deviceName = "${Build.MANUFACTURER} ${Build.MODEL}".trim()
 
     val albumCount = songs.map { it.album?.trim().orEmpty() }
         .filter { it.isNotEmpty() }
@@ -101,7 +108,7 @@ fun MenuScreen(navController: NavController) {
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            HomeHeader()
+            HomeHeader(displayName = displayName, deviceName = deviceName, onSettingsClick = { navController.navigate(SettingsRouteAlias) })
             HeroMusicCard(onClick = { navController.navigate(MusicRoute) }, isCompact = isLandscape)
 
             Text(
@@ -167,7 +174,7 @@ fun MenuScreen(navController: NavController) {
 }
 
 @Composable
-private fun HomeHeader() {
+private fun HomeHeader(displayName: String, deviceName: String, onSettingsClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -195,13 +202,13 @@ private fun HomeHeader() {
             }
             Spacer(Modifier.width(12.dp))
             Column {
-                Text("Pulse Player", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Text("Reproductor Local", color = Color.White.copy(alpha = 0.45f), fontSize = 13.sp)
+                Text(displayName, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(deviceName, color = Color.White.copy(alpha = 0.45f), fontSize = 13.sp)
             }
         }
 
         IconButton(
-            onClick = {},
+            onClick = onSettingsClick,
             modifier = Modifier
                 .size(42.dp)
                 .clip(RoundedCornerShape(12.dp))

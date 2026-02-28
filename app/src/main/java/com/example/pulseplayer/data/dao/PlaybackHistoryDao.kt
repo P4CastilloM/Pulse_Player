@@ -104,4 +104,27 @@ interface PlaybackHistoryDao {
     """)
     suspend fun getStudyModeTracks(limit: Int = 50): List<SmartPlaylistTrack>
 
+
+
+    @Query("SELECT COUNT(*) FROM playback_history WHERE played_at LIKE :dayPrefix || '%'")
+    suspend fun getCountForDay(dayPrefix: String): Int
+
+    @Query("SELECT COUNT(DISTINCT id_song) FROM playback_history")
+    suspend fun getUniqueTracksCount(): Int
+
+    @Query("""
+        SELECT COALESCE(SUM(COALESCE(h.played_ms, s.duration_ms)), 0)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+    """)
+    suspend fun getTotalListeningMs(): Long
+
+    @Query("""
+        SELECT COALESCE(SUM(COALESCE(h.played_ms, s.duration_ms)), 0)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at LIKE :dayPrefix || '%'
+    """)
+    suspend fun getListeningMsForDay(dayPrefix: String): Long
+
 }
