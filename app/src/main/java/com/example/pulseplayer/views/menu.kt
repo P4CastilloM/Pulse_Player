@@ -58,6 +58,8 @@ import com.example.pulseplayer.Albums
 import com.example.pulseplayer.FavoriteScreen
 import com.example.pulseplayer.Music
 import com.example.pulseplayer.PlaybackHistoryScreen
+import com.example.pulseplayer.SmartPlaylists
+import com.example.pulseplayer.UnheardIn30Days
 import com.example.pulseplayer.PlaylistScreen
 import com.example.pulseplayer.SmartPlaylists
 import com.example.pulseplayer.UnheardIn30Days
