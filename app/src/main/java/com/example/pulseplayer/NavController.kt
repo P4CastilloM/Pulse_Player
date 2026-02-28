@@ -14,6 +14,8 @@ import com.example.pulseplayer.views.MusicScreen
 import com.example.pulseplayer.views.favorite.FavoriteScreen
 import com.example.pulseplayer.views.player.NowPlayingScreen
 import com.example.pulseplayer.views.playbackhistory.PlaybackHistoryScreen
+import com.example.pulseplayer.views.smartplaylists.SmartPlaylistsScreen
+import com.example.pulseplayer.views.smartplaylists.UnheardIn30DaysScreen
 import com.example.pulseplayer.views.playlist.AddSongsToPlaylistScreen
 import com.example.pulseplayer.views.playlist.PlaylistCreateScreen
 import com.example.pulseplayer.views.playlist.PlaylistDetailsScreen
@@ -51,6 +53,13 @@ data class AddSongsToPlaylistScreen(val playlistId: Int)
 //PlaybackHistory
 @Serializable
 object PlaybackHistoryScreen
+
+//SMART
+@Serializable
+object SmartPlaylists
+
+@Serializable
+object UnheardIn30Days
 
 //FAVORITE
 @Serializable
@@ -90,6 +99,14 @@ fun Navigation(songs: List<Song>){
 
         composable<PlaybackHistoryScreen> {
             PlaybackHistoryScreen(navController, playerViewModel = playerViewModel)
+        }
+
+        composable<SmartPlaylists> {
+            SmartPlaylistsScreen(navController = navController, playerViewModel = playerViewModel)
+        }
+
+        composable<UnheardIn30Days> {
+            UnheardIn30DaysScreen(navController = navController, playerViewModel = playerViewModel)
         }
 
         composable<FavoriteScreen> {

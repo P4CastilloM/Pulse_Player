@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,8 +19,10 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Album
@@ -43,17 +46,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.pulseplayer.Albums
-import com.example.pulseplayer.FavoriteScreen
-import com.example.pulseplayer.Music
-import com.example.pulseplayer.PlaybackHistoryScreen
-import com.example.pulseplayer.PlaylistScreen
+import com.example.pulseplayer.Albums as AlbumsRoute
+import com.example.pulseplayer.FavoriteScreen as FavoriteRoute
+import com.example.pulseplayer.Music as MusicRoute
+import com.example.pulseplayer.PlaybackHistoryScreen as PlaybackHistoryRoute
+import com.example.pulseplayer.PlaylistScreen as PlaylistRoute
+import com.example.pulseplayer.SmartPlaylists as SmartPlaylistsRoute
+import com.example.pulseplayer.UnheardIn30Days as UnheardIn30DaysRoute
 import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlaylistViewModel
 import com.example.pulseplayer.views.viewmodel.SongViewModel
@@ -64,6 +71,8 @@ fun MenuScreen(navController: NavController) {
     val playlistViewModel: PlaylistViewModel = viewModel()
     val songs by songViewModel.allSongs.collectAsState()
     val playlists by playlistViewModel.playlists.collectAsState()
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
 
     val albumCount = songs.map { it.album?.trim().orEmpty() }
         .filter { it.isNotEmpty() }
@@ -71,10 +80,12 @@ fun MenuScreen(navController: NavController) {
         .size
 
     val categories = listOf(
-        LibraryCategory("Álbumes", "$albumCount álbumes", Icons.Outlined.Album, Color(0xFF8B5CF6)) { navController.navigate(Albums) },
-        LibraryCategory("Listas", "${playlists.size} listas", Icons.Outlined.QueueMusic, Color(0xFF60A5FA)) { navController.navigate(PlaylistScreen) },
-        LibraryCategory("Historial", "Recientes", Icons.Outlined.AccessTime, Color(0xFF34D399)) { navController.navigate(PlaybackHistoryScreen) },
-        LibraryCategory("Favoritos", "${songs.count { it.isFavorite }} canciones", Icons.Outlined.FavoriteBorder, Color(0xFFFB7185)) { navController.navigate(FavoriteScreen) }
+        LibraryCategory("Álbumes", "$albumCount álbumes", Icons.Outlined.Album, Color(0xFF8B5CF6)) { navController.navigate(AlbumsRoute) },
+        LibraryCategory("Listas", "${playlists.size} listas", Icons.Outlined.QueueMusic, Color(0xFF60A5FA)) { navController.navigate(PlaylistRoute) },
+        LibraryCategory("Historial", "Recientes", Icons.Outlined.AccessTime, Color(0xFF34D399)) { navController.navigate(PlaybackHistoryRoute) },
+        LibraryCategory("Favoritos", "${songs.count { it.isFavorite }} canciones", Icons.Outlined.FavoriteBorder, Color(0xFFFB7185)) { navController.navigate(FavoriteRoute) },
+        LibraryCategory("Smart Playlists", "Automáticas", Icons.Outlined.LibraryMusic, Color(0xFF22D3EE)) { navController.navigate(SmartPlaylistsRoute) },
+        LibraryCategory("No escuchadas", "Últimos 30 días", Icons.Outlined.Search, Color(0xFFFBBF24)) { navController.navigate(UnheardIn30DaysRoute) }
     )
 
     Box(
@@ -85,9 +96,13 @@ fun MenuScreen(navController: NavController) {
             .navigationBarsPadding()
             .padding(horizontal = 20.dp)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
             HomeHeader()
-            HeroMusicCard(onClick = { navController.navigate(Music) })
+            HeroMusicCard(onClick = { navController.navigate(MusicRoute) }, isCompact = isLandscape)
 
             Text(
                 text = "BIBLIOTECA",
@@ -97,19 +112,30 @@ fun MenuScreen(navController: NavController) {
                 modifier = Modifier.padding(top = 18.dp, bottom = 10.dp)
             )
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                userScrollEnabled = false,
-                modifier = Modifier.height(270.dp)
-            ) {
-                items(categories.size) { index ->
-                    CategoryCard(categories[index])
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                val columns = when {
+                    maxWidth > 900.dp -> 4
+                    maxWidth > 700.dp -> 3
+                    else -> 2
+                }
+                val cardHeight = if (isLandscape) 122.dp else 138.dp
+                val rowCount = (categories.size + columns - 1) / columns
+                val gridHeight = (cardHeight * rowCount) + (12.dp * (rowCount - 1).coerceAtLeast(0))
+
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(columns),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    userScrollEnabled = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(gridHeight)
+                ) {
+                    items(categories.size) { index ->
+                        CategoryCard(categories[index], cardHeight)
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.weight(1f))
 
             MiniPlayerBar(
                 navController = navController,
@@ -120,10 +146,12 @@ fun MenuScreen(navController: NavController) {
 
             BottomNavStrip(
                 onHomeClick = {},
-                onSearchClick = { navController.navigate(Music) },
-                onLibraryClick = { navController.navigate(Albums) },
+                onSearchClick = { navController.navigate(MusicRoute) },
+                onLibraryClick = { navController.navigate(AlbumsRoute) },
                 modifier = Modifier.padding(top = 16.dp)
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
         Box(
@@ -186,29 +214,29 @@ private fun HomeHeader() {
 }
 
 @Composable
-private fun HeroMusicCard(onClick: () -> Unit) {
+private fun HeroMusicCard(onClick: () -> Unit, isCompact: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(210.dp)
+            .height(if (isCompact) 140.dp else 210.dp)
             .clip(RoundedCornerShape(26.dp))
             .background(Brush.linearGradient(listOf(Color(0xFF5B21B6), Color(0xFF1E3A8A), Color(0xFF0F172A))))
             .clickable(onClick = onClick)
-            .padding(24.dp),
+            .padding(if (isCompact) 16.dp else 24.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
                 modifier = Modifier
-                    .size(66.dp)
+                    .size(if (isCompact) 54.dp else 66.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(Color.White.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Rounded.MusicNote, contentDescription = null, tint = Color.White, modifier = Modifier.size(34.dp))
+                Icon(Icons.Rounded.MusicNote, contentDescription = null, tint = Color.White, modifier = Modifier.size(if (isCompact) 28.dp else 34.dp))
             }
-            Text("Música", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 10.dp))
-            Text("Explorar biblioteca", color = Color.White.copy(alpha = 0.6f), fontSize = 15.sp)
+            Text("Música", color = Color.White, fontSize = if (isCompact) 20.sp else 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 10.dp))
+            Text("Explorar biblioteca", color = Color.White.copy(alpha = 0.6f), fontSize = if (isCompact) 13.sp else 15.sp)
         }
     }
 }
@@ -222,10 +250,11 @@ data class LibraryCategory(
 )
 
 @Composable
-private fun CategoryCard(item: LibraryCategory) {
+private fun CategoryCard(item: LibraryCategory, minHeight: Dp) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .height(minHeight)
             .clip(RoundedCornerShape(18.dp))
             .background(Brush.linearGradient(listOf(Color(0xFF13203C), Color(0xFF0A132B))))
             .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(18.dp))
@@ -272,7 +301,9 @@ private fun BottomNavStrip(
 private fun BottomNavItem(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(onClick = onClick).padding(4.dp)
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(4.dp)
     ) {
         Icon(icon, contentDescription = label, tint = if (selected) Color(0xFF8B5CF6) else Color.White.copy(alpha = 0.38f))
         Text(
