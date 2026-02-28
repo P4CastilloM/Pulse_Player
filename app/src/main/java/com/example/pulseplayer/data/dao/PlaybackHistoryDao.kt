@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.example.pulseplayer.data.entity.GenrePlayStat
 import com.example.pulseplayer.data.entity.NamedPlayStat
 import com.example.pulseplayer.data.entity.PlaybackHistory
 import com.example.pulseplayer.data.entity.SmartPlaylistTrack
@@ -178,5 +179,92 @@ interface PlaybackHistoryDao {
         WHERE s.genre IS NOT NULL AND TRIM(s.genre) != ''
     """)
     suspend fun getUniqueGenresCount(): Int
+
+
+
+    @Query("""
+        SELECT COALESCE(SUM(COALESCE(h.played_ms, s.duration_ms)), 0)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+    """)
+    suspend fun getListeningMsSince(fromDate: String): Long
+
+    @Query("SELECT COUNT(DISTINCT id_song) FROM playback_history WHERE played_at >= :fromDate")
+    suspend fun getUniqueTracksSince(fromDate: String): Int
+
+    @Query("""
+        SELECT COUNT(DISTINCT s.artist_name)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+    """)
+    suspend fun getUniqueArtistsSince(fromDate: String): Int
+
+    @Query("""
+        SELECT COUNT(DISTINCT s.genre)
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+          AND s.genre IS NOT NULL AND TRIM(s.genre) != ''
+    """)
+    suspend fun getUniqueGenresSince(fromDate: String): Int
+
+    @Query("""
+        SELECT s.title AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+        GROUP BY s.id_song
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT 1
+    """)
+    suspend fun getTopSongStatSince(fromDate: String): NamedPlayStat?
+
+    @Query("""
+        SELECT s.artist_name AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+        GROUP BY s.artist_name
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT 1
+    """)
+    suspend fun getTopArtistStatSince(fromDate: String): NamedPlayStat?
+
+    @Query("""
+        SELECT s.genre AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+          AND s.genre IS NOT NULL AND TRIM(s.genre) != ''
+        GROUP BY s.genre
+        ORDER BY play_count DESC, MAX(h.played_at) DESC
+        LIMIT 1
+    """)
+    suspend fun getTopGenreStatSince(fromDate: String): NamedPlayStat?
+
+    @Query("""
+        SELECT s.genre AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE s.genre IS NOT NULL AND TRIM(s.genre) != ''
+        GROUP BY s.genre
+        ORDER BY play_count DESC
+        LIMIT :limit
+    """)
+    suspend fun getGenreDistribution(limit: Int = 5): List<GenrePlayStat>
+
+    @Query("""
+        SELECT s.genre AS label, COUNT(h.id) AS play_count
+        FROM playback_history h
+        INNER JOIN song s ON s.id_song = h.id_song
+        WHERE h.played_at >= :fromDate
+          AND s.genre IS NOT NULL AND TRIM(s.genre) != ''
+        GROUP BY s.genre
+        ORDER BY play_count DESC
+        LIMIT :limit
+    """)
+    suspend fun getGenreDistributionSince(fromDate: String, limit: Int = 5): List<GenrePlayStat>
 
 }
