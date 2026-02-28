@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -53,6 +54,8 @@ import com.example.pulseplayer.Albums
 import com.example.pulseplayer.FavoriteScreen
 import com.example.pulseplayer.Music
 import com.example.pulseplayer.PlaybackHistoryScreen
+import com.example.pulseplayer.SmartPlaylists
+import com.example.pulseplayer.UnheardIn30Days
 import com.example.pulseplayer.PlaylistScreen
 import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlaylistViewModel
@@ -74,7 +77,9 @@ fun MenuScreen(navController: NavController) {
         LibraryCategory("Álbumes", "$albumCount álbumes", Icons.Outlined.Album, Color(0xFF8B5CF6)) { navController.navigate(Albums) },
         LibraryCategory("Listas", "${playlists.size} listas", Icons.Outlined.QueueMusic, Color(0xFF60A5FA)) { navController.navigate(PlaylistScreen) },
         LibraryCategory("Historial", "Recientes", Icons.Outlined.AccessTime, Color(0xFF34D399)) { navController.navigate(PlaybackHistoryScreen) },
-        LibraryCategory("Favoritos", "${songs.count { it.isFavorite }} canciones", Icons.Outlined.FavoriteBorder, Color(0xFFFB7185)) { navController.navigate(FavoriteScreen) }
+        LibraryCategory("Favoritos", "${songs.count { it.isFavorite }} canciones", Icons.Outlined.FavoriteBorder, Color(0xFFFB7185)) { navController.navigate(FavoriteScreen) },
+        LibraryCategory("Smart Playlists", "Automáticas", Icons.Outlined.LibraryMusic, Color(0xFF22D3EE)) { navController.navigate(SmartPlaylists) },
+        LibraryCategory("No escuchadas", "Últimos 30 días", Icons.Outlined.Search, Color(0xFFFBBF24)) { navController.navigate(UnheardIn30Days) }
     )
 
     Box(
@@ -97,19 +102,19 @@ fun MenuScreen(navController: NavController) {
                 modifier = Modifier.padding(top = 18.dp, bottom = 10.dp)
             )
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                userScrollEnabled = false,
-                modifier = Modifier.height(270.dp)
-            ) {
-                items(categories.size) { index ->
-                    CategoryCard(categories[index])
+            BoxWithConstraints(modifier = Modifier.weight(1f)) {
+                val columns = if (maxWidth > 700.dp) 3 else 2
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(columns),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(categories.size) { index ->
+                        CategoryCard(categories[index])
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.weight(1f))
 
             MiniPlayerBar(
                 navController = navController,
