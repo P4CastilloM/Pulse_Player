@@ -17,6 +17,7 @@ import com.example.pulseplayer.views.playbackhistory.PlaybackHistoryScreen
 import com.example.pulseplayer.views.smartplaylists.SmartPlaylistsScreen
 import com.example.pulseplayer.views.smartplaylists.UnheardIn30DaysScreen
 import com.example.pulseplayer.views.settings.SettingsScreen
+import com.example.pulseplayer.views.statistics.PersonalStatsScreen
 import com.example.pulseplayer.views.playlist.AddSongsToPlaylistScreen
 import com.example.pulseplayer.views.playlist.PlaylistCreateScreen
 import com.example.pulseplayer.views.playlist.PlaylistDetailsScreen
@@ -65,6 +66,9 @@ object UnheardIn30Days
 //SETTINGS
 @Serializable
 object SettingsRoute
+
+@Serializable
+object PersonalStatsRoute
 
 //FAVORITE
 @Serializable
@@ -120,6 +124,10 @@ fun Navigation(songs: List<Song>){
 
         composable<SettingsRoute> {
             SettingsScreen()
+        }
+
+        composable<PersonalStatsRoute> {
+            PersonalStatsScreen()
         }
 
         composable<PlaylistDetailScreen> {backStackEntry ->

@@ -63,6 +63,7 @@ import com.example.pulseplayer.PlaybackHistoryScreen as PlaybackHistoryRoute
 import com.example.pulseplayer.PlaylistScreen as PlaylistRoute
 import com.example.pulseplayer.SmartPlaylists as SmartPlaylistsRoute
 import com.example.pulseplayer.SettingsRoute as SettingsRouteAlias
+import com.example.pulseplayer.PersonalStatsRoute as PersonalStatsRouteAlias
 import com.example.pulseplayer.data.local.UserPreferences
 import com.example.pulseplayer.ui.components.MiniPlayerBar
 import com.example.pulseplayer.views.viewmodel.PlaylistViewModel
@@ -91,7 +92,7 @@ fun MenuScreen(navController: NavController) {
         LibraryCategory("Historial", "Recientes", Icons.Outlined.AccessTime, Color(0xFF34D399)) { navController.navigate(PlaybackHistoryRoute) },
         LibraryCategory("Favoritos", "${songs.count { it.isFavorite }} canciones", Icons.Outlined.FavoriteBorder, Color(0xFFFB7185)) { navController.navigate(FavoriteRoute) },
         LibraryCategory("Smart Playlists", "Automáticas", Icons.Outlined.LibraryMusic, Color(0xFF22D3EE)) { navController.navigate(SmartPlaylistsRoute) },
-        LibraryCategory("Estadísticas", "Personales", Icons.Outlined.Search, Color(0xFFFBBF24)) { navController.navigate(SettingsRouteAlias) }
+        LibraryCategory("Estadísticas", "Personales", Icons.Outlined.Search, Color(0xFFFBBF24)) { navController.navigate(PersonalStatsRouteAlias) }
     )
 
     Box(
