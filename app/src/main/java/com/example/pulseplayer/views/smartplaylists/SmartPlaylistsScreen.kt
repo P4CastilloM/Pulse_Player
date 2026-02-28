@@ -134,7 +134,7 @@ fun SmartPlaylistsScreen(navController: NavController, playerViewModel: PlayerVi
 }
 
 @Composable
-private fun SmartTrackCard(track: SmartPlaylistTrack, onClick: () -> Unit) {
+fun SmartTrackCard(track: SmartPlaylistTrack, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
